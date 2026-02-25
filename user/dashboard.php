@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db_config.php';
 
 // Check if user is logged in using cafe_user_id
@@ -170,7 +172,7 @@ ob_start();
                                     </span>
                                 </td>
                                 <td class="text-end pe-4 fw-bold">
-                                    $<?php echo number_format($order['total_amount'], 2); ?>
+                                    ₹<?php echo number_format($order['total_amount'], 2); ?>
                                 </td>
                             </tr>
                             <?php endwhile; ?>
@@ -223,7 +225,7 @@ ob_start();
                     </div>
                 </div>
                 <p class="small mb-0 opacity-75">
-                    <i class="fas fa-info-circle me-1"></i>Earn 10 points for every $1 spent!
+                    <i class="fas fa-info-circle me-1"></i>Earn 10 points for every ₹1 spent!
                 </p>
             </div>
         </div>

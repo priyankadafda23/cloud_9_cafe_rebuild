@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 // Check if user is logged in using cafe_user_id
 if (!isset($_SESSION['cafe_user_id'])) {
     header("Location: login.php");
@@ -47,8 +49,8 @@ ob_start();
                 <h6 class="fw-bold mb-1">Wireless Headphones</h6>
                 <p class="text-muted small mb-2">Electronics</p>
                 <div class="d-flex justify-content-between align-items-center">
-                    <span class="h5 mb-0 fw-bold" style="color: #667eea;">$120.00</span>
-                    <span class="text-decoration-line-through text-muted small">$150.00</span>
+                    <span class="h5 mb-0 fw-bold" style="color: #667eea;">₹9,999</span>
+                    <span class="text-decoration-line-through text-muted small">₹12,499</span>
                 </div>
                 <button class="btn btn-gradient w-100 mt-3 btn-sm">
                     <i class="fas fa-shopping-cart me-2"></i>Add to Cart
@@ -76,7 +78,7 @@ ob_start();
                 <h6 class="fw-bold mb-1">Smart Fitness Watch</h6>
                 <p class="text-muted small mb-2">Wearables</p>
                 <div class="d-flex justify-content-between align-items-center">
-                    <span class="h5 mb-0 fw-bold" style="color: #667eea;">$180.00</span>
+                    <span class="h5 mb-0 fw-bold" style="color: #667eea;">₹14,999</span>
                 </div>
                 <button class="btn btn-gradient w-100 mt-3 btn-sm">
                     <i class="fas fa-shopping-cart me-2"></i>Add to Cart
@@ -100,8 +102,8 @@ ob_start();
                 <h6 class="fw-bold mb-1">Premium Backpack</h6>
                 <p class="text-muted small mb-2">Accessories</p>
                 <div class="d-flex justify-content-between align-items-center">
-                    <span class="h5 mb-0 fw-bold" style="color: #667eea;">$90.00</span>
-                    <span class="text-decoration-line-through text-muted small">$110.00</span>
+                    <span class="h5 mb-0 fw-bold" style="color: #667eea;">₹7,499</span>
+                    <span class="text-decoration-line-through text-muted small">₹8,999</span>
                 </div>
                 <button class="btn btn-gradient w-100 mt-3 btn-sm">
                     <i class="fas fa-shopping-cart me-2"></i>Add to Cart
@@ -129,7 +131,7 @@ ob_start();
                 <h6 class="fw-bold mb-1">Bluetooth Speaker</h6>
                 <p class="text-muted small mb-2">Audio</p>
                 <div class="d-flex justify-content-between align-items-center">
-                    <span class="h5 mb-0 fw-bold" style="color: #667eea;">$75.00</span>
+                    <span class="h5 mb-0 fw-bold" style="color: #667eea;">₹6,299</span>
                 </div>
                 <button class="btn btn-gradient w-100 mt-3 btn-sm">
                     <i class="fas fa-shopping-cart me-2"></i>Add to Cart

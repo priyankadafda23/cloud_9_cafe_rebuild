@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in using cafe_admin_id
@@ -84,7 +86,7 @@ ob_start();
                 <i class="fas fa-dollar-sign"></i>
             </div>
             <div class="admin-stat-content">
-                <h3>$<?php echo number_format($stats['total_revenue'], 2); ?></h3>
+                <h3>₹<?php echo number_format($stats['total_revenue'], 2); ?></h3>
                 <p>Total Revenue</p>
             </div>
         </div>
@@ -140,7 +142,7 @@ ob_start();
                                         <?php echo $order['status']; ?>
                                     </span>
                                 </td>
-                                <td class="text-end pe-4 fw-bold">$<?php echo number_format($order['total_amount'], 2); ?></td>
+                                <td class="text-end pe-4 fw-bold">₹<?php echo number_format($order['total_amount'], 2); ?></td>
                             </tr>
                             <?php endwhile; ?>
                         </tbody>

@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
@@ -36,14 +38,30 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     
     $image_sql = '';
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $upload_dir = '../assets/images/menu/';
+        // Upload to new path: assets/uploads/menu_images/{menu_id}/
+        $upload_dir = '../assets/uploads/menu_images/' . $item_id . '/';
         if (!is_dir($upload_dir)) {
             mkdir($upload_dir, 0755, true);
         }
-        $filename = time() . '_' . $_FILES['image']['name'];
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_dir . $filename)) {
-            $image = 'menu/' . $filename;
-            $image_sql = ", image = '$image'";
+        
+        // Get file extension
+        $file_info = pathinfo($_FILES['image']['name']);
+        $extension = strtolower($file_info['extension']);
+        
+        // Validate allowed extensions
+        $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if (in_array($extension, $allowed)) {
+            // Delete old image if exists
+            if ($item['image'] && file_exists('../' . $item['image'])) {
+                unlink('../' . $item['image']);
+            }
+            
+            // Save as image1.{extension}
+            $filename = 'image1.' . $extension;
+            if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_dir . $filename)) {
+                $image = 'assets/uploads/menu_images/' . $item_id . '/' . $filename;
+                $image_sql = ", image = '$image'";
+            }
         }
     }
     
@@ -178,11 +196,25 @@ ob_start();
                 
                 <div class="col-md-4">
                     <label class="form-label">Item Image</label>
-                    <div class="image-preview mb-3" id="imagePreview">
-                        <?php if ($item['image']): ?>
-                        <img src="../assets/images/<?php echo $item['image']; ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
+                    <div class="image-preview mb-3" id="imagePreview" style="position: relative;">
+                        <?php 
+                        // Check image in priority order: new path -> old path -> placeholder
+                        $image_path = '';
+                        if ($item['image']) {
+                            if (file_exists("../{$item['image']}")) {
+                                $image_path = "../{$item['image']}";
+                            } elseif (file_exists("../assets/images/{$item['image']}")) {
+                                $image_path = "../assets/images/{$item['image']}";
+                            }
+                        }
+                        ?>
+                        <?php if ($image_path): ?>
+                        <img src="<?php echo $image_path; ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
                         <?php else: ?>
-                        <i class="fas fa-image fa-3x text-muted"></i>
+                        <div class="d-flex align-items-center justify-content-center flex-column" style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--cafe-primary-light) 0%, var(--cafe-primary) 100%);">
+                            <i class="fas fa-coffee fa-3x text-white mb-2"></i>
+                            <span class="text-white small">No Image</span>
+                        </div>
                         <?php endif; ?>
                     </div>
                     <input type="file" name="image" class="form-control" id="imageInput" accept="image/*">

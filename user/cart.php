@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db_config.php';
 
 // Check if user is logged in using cafe_user_id
@@ -124,8 +126,8 @@ ob_start();
                                 </form>
                             </div>
                             <div class="col-md-3 text-end">
-                                <h5 class="fw-bold mb-0 text-dark">$<?php echo number_format($item['price'] * $item['quantity'], 2); ?></h5>
-                                <small class="text-muted">$<?php echo number_format($item['price'], 2); ?> each</small>
+                                <h5 class="fw-bold mb-0 text-dark">₹<?php echo number_format($item['price'] * $item['quantity'], 2); ?></h5>
+                                <small class="text-muted">₹<?php echo number_format($item['price'], 2); ?> each</small>
                             </div>
                         </div>
                     </div>
@@ -146,16 +148,16 @@ ob_start();
                     <h4 class="fw-bold mb-4">Order Summary</h4>
                     <div class="d-flex justify-content-between mb-3">
                         <span class="text-muted">Subtotal (<?php echo $item_count; ?> items)</span>
-                        <span class="fw-semibold">$<?php echo number_format($total_amount, 2); ?></span>
+                        <span class="fw-semibold">₹<?php echo number_format($total_amount, 2); ?></span>
                     </div>
                     <div class="d-flex justify-content-between mb-3">
                         <span class="text-muted">Tax (8%)</span>
-                        <span class="fw-semibold">$<?php echo number_format($total_amount * 0.08, 2); ?></span>
+                        <span class="fw-semibold">₹<?php echo number_format($total_amount * 0.08, 2); ?></span>
                     </div>
                     <hr class="my-4">
                     <div class="d-flex justify-content-between mb-4">
                         <span class="fw-bold fs-5">Total</span>
-                        <span class="fw-bold fs-4 text-primary">$<?php echo number_format($total_amount * 1.08, 2); ?></span>
+                        <span class="fw-bold fs-4 text-primary">₹<?php echo number_format($total_amount * 1.08, 2); ?></span>
                     </div>
 
                     <button class="btn btn-gradient w-100 py-3 fw-bold shadow-sm mb-2" data-bs-toggle="modal"
@@ -231,7 +233,7 @@ ob_start();
                     <div class="bg-light p-3 rounded">
                         <div class="d-flex justify-content-between mb-2">
                             <span>Subtotal:</span>
-                            <span>$<?php echo number_format($total_amount, 2); ?></span>
+                            <span>₹<?php echo number_format($total_amount, 2); ?></span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Tax (8%):</span>
@@ -240,7 +242,7 @@ ob_start();
                         <hr class="my-2">
                         <div class="d-flex justify-content-between fw-bold">
                             <span>Total:</span>
-                            <span class="text-primary">$<?php echo number_format($total_amount * 1.08, 2); ?></span>
+                            <span class="text-primary">₹<?php echo number_format($total_amount * 1.08, 2); ?></span>
                         </div>
                     </div>
                     

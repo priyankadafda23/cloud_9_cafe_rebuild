@@ -185,25 +185,6 @@ ob_start();
     </div>
 </section>
 
-<!-- Map Section -->
-<section class="py-5">
-    <div class="container">
-        <div class="card border-0 shadow-lg overflow-hidden">
-            <div class="ratio ratio-21x9">
-                <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.2!2d-74.006!3d40.7128!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDDCsDQyJzQ2LjEiTiA3NMKwMDAnMjEuNiJX!5e0!3m2!1sen!2sus!4v1234567890"
-                    width="100%" 
-                    height="450" 
-                    style="border:0;" 
-                    allowfullscreen="" 
-                    loading="lazy"
-                    referrerpolicy="no-referrer-when-downgrade">
-                </iframe>
-            </div>
-        </div>
-    </div>
-</section>
-
 <?php
 $content = ob_get_clean();
 include '../includes/layout.php';

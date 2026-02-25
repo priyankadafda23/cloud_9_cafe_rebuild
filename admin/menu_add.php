@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
@@ -19,23 +21,39 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $stock = intval($_POST['stock_quantity']);
     $featured = isset($_POST['featured']) ? 1 : 0;
     
-    // Handle image upload
-    $image = '';
-    if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-        $upload_dir = '../assets/images/menu/';
-        if (!is_dir($upload_dir)) {
-            mkdir($upload_dir, 0755, true);
-        }
-        $filename = time() . '_' . $_FILES['image']['name'];
-        if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_dir . $filename)) {
-            $image = 'menu/' . $filename;
-        }
-    }
-    
+    // First insert to get the menu item ID
     $query = "INSERT INTO menu_items (name, description, price, category, image, stock_quantity, featured) 
-              VALUES ('$name', '$description', $price, '$category', '$image', $stock, $featured)";
+              VALUES ('$name', '$description', $price, '$category', '', $stock, $featured)";
     
     if (mysqli_query($con, $query)) {
+        $menu_id = mysqli_insert_id($con);
+        
+        // Handle image upload to new path: assets/uploads/menu_images/{menu_id}/
+        $image = '';
+        if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
+            $upload_dir = '../assets/uploads/menu_images/' . $menu_id . '/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
+            
+            // Get file extension
+            $file_info = pathinfo($_FILES['image']['name']);
+            $extension = strtolower($file_info['extension']);
+            
+            // Validate allowed extensions
+            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            if (in_array($extension, $allowed)) {
+                // Save as image1.{extension}
+                $filename = 'image1.' . $extension;
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_dir . $filename)) {
+                    $image = 'assets/uploads/menu_images/' . $menu_id . '/' . $filename;
+                    
+                    // Update the menu item with image path
+                    mysqli_query($con, "UPDATE menu_items SET image = '$image' WHERE id = $menu_id");
+                }
+            }
+        }
+        
         header("Location: menu.php");
         exit();
     } else {
@@ -156,8 +174,9 @@ ob_start();
                 
                 <div class="col-md-4">
                     <label class="form-label">Item Image</label>
-                    <div class="image-preview mb-3" id="imagePreview">
-                        <i class="fas fa-image fa-3x text-muted"></i>
+                    <div class="image-preview mb-3" id="imagePreview" style="display: flex; align-items: center; justify-content: center; flex-direction: column; background: linear-gradient(135deg, var(--cafe-primary-light) 0%, var(--cafe-primary) 100%);">
+                        <i class="fas fa-coffee fa-3x text-white mb-2"></i>
+                        <span class="text-white small">Upload Image</span>
                     </div>
                     <input type="file" name="image" class="form-control" id="imageInput" accept="image/*">
                     <small class="text-muted">Recommended size: 400x400px</small>

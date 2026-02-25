@@ -1,11 +1,20 @@
 <?php
-session_start();
+// Only start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check if admin is logged in
 if (!isset($_SESSION['cafe_admin_id'])) {
     header("Location: ../auth/login.php");
     exit();
 }
+
+// Include database and fetch admin data
+require_once __DIR__ . '/../config/db_config.php';
+$admin_id = $_SESSION['cafe_admin_id'];
+$admin_query = mysqli_query($con, "SELECT * FROM cafe_admins WHERE id = $admin_id");
+$current_admin = mysqli_fetch_assoc($admin_query);
 
 // Get current page
 $current_page = basename($_SERVER['PHP_SELF'], '.php');
@@ -458,9 +467,10 @@ ob_start();
             </div>
             
             <div class="admin-profile">
-                <img src="../assets/images/profile_pictures/default.png" alt="Admin" class="admin-avatar" onerror="this.src='https://via.placeholder.com/48'">
+                <img src="<?php echo $current_admin['profile_picture'] ? '/' . $current_admin['profile_picture'] : '/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'; ?>" 
+                     alt="Admin" class="admin-avatar" onerror="this.src='/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'">
                 <div class="admin-info">
-                    <h6 class="mb-0"><?php echo $_SESSION['cafe_admin_name'] ?? 'Admin'; ?></h6>
+                    <h6 class="mb-0"><?php echo htmlspecialchars($current_admin['fullname'] ?? 'Admin'); ?></h6>
                     <small><?php echo $_SESSION['cafe_admin_role'] ?? 'Administrator'; ?></small>
                 </div>
             </div>
@@ -485,10 +495,6 @@ ob_start();
                 </a>
                 
                 <div class="nav-section">Management</div>
-                <a href="offers.php" class="nav-link <?php echo $current_page == 'offers' ? 'active' : ''; ?>">
-                    <i class="fas fa-tag"></i>
-                    Offers
-                </a>
                 <a href="messages.php" class="nav-link <?php echo $current_page == 'messages' ? 'active' : ''; ?>">
                     <i class="fas fa-envelope"></i>
                     Messages

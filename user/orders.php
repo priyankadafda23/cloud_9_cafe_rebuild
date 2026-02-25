@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db_config.php';
 
 // Check if user is logged in using cafe_user_id
@@ -157,7 +159,7 @@ ob_start();
                         <h6 class="fw-semibold mb-1"><?php echo htmlspecialchars($first_item['name'] ?? 'Item'); ?></h6>
                         <p class="text-muted small mb-0"><?php echo $items_count; ?> item<?php echo $items_count > 1 ? 's' : ''; ?></p>
                     </div>
-                    <h5 class="fw-bold mb-0">$<?php echo number_format($order['total_amount'], 2); ?></h5>
+                    <h5 class="fw-bold mb-0">₹<?php echo number_format($order['total_amount'], 2); ?></h5>
                 </div>
                 
                 <?php if ($order['order_note']): ?>
@@ -243,12 +245,12 @@ ob_start();
                                                  style="width: 60px; height: 60px; object-fit: cover; background: #f8f9fa;">
                                             <div class="flex-grow-1">
                                                 <h6 class="fw-semibold mb-1"><?php echo htmlspecialchars($item['name']); ?></h6>
-                                                <p class="text-muted small mb-0">Qty: <?php echo $item['quantity']; ?> × $<?php echo number_format($item['unit_price'], 2); ?></p>
+                                                <p class="text-muted small mb-0">Qty: <?php echo $item['quantity']; ?> × ₹<?php echo number_format($item['unit_price'], 2); ?></p>
                                                 <?php if ($item['customization']): ?>
                                                 <small class="text-info"><i class="fas fa-info-circle me-1"></i><?php echo htmlspecialchars($item['customization']); ?></small>
                                                 <?php endif; ?>
                                             </div>
-                                            <h6 class="fw-bold mb-0">$<?php echo number_format($item['subtotal'], 2); ?></h6>
+                                            <h6 class="fw-bold mb-0">₹<?php echo number_format($item['subtotal'], 2); ?></h6>
                                         </div>
                                     </div>
                                 </div>
@@ -287,16 +289,16 @@ ob_start();
                                     <div class="card-body p-3">
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="text-muted">Subtotal</span>
-                                            <span class="fw-semibold">$<?php echo number_format($order['total_amount'] / 1.08, 2); ?></span>
+                                            <span class="fw-semibold">₹<?php echo number_format($order['total_amount'] / 1.08, 2); ?></span>
                                         </div>
                                         <div class="d-flex justify-content-between mb-2">
                                             <span class="text-muted">Tax (8%)</span>
-                                            <span class="fw-semibold">$<?php echo number_format($order['total_amount'] - ($order['total_amount'] / 1.08), 2); ?></span>
+                                            <span class="fw-semibold">₹<?php echo number_format($order['total_amount'] - ($order['total_amount'] / 1.08), 2); ?></span>
                                         </div>
                                         <hr>
                                         <div class="d-flex justify-content-between">
                                             <span class="fw-bold">Total</span>
-                                            <span class="fw-bold text-primary">$<?php echo number_format($order['total_amount'], 2); ?></span>
+                                            <span class="fw-bold text-primary">₹<?php echo number_format($order['total_amount'], 2); ?></span>
                                         </div>
                                     </div>
                                 </div>

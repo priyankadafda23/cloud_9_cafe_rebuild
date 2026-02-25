@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 // Check if user is logged in using cafe_user_id
 if (!isset($_SESSION['cafe_user_id'])) {
     header("Location: login.php");

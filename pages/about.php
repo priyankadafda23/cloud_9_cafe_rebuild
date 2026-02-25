@@ -1,95 +1,199 @@
 <?php
-$title = "About Us - JK Store";
+$title = "About Us - Cloud 9 Cafe";
 ob_start();
 ?>
-<div class="container">
-    <div class="row mb-5 fade-in-up">
-        <div class="col-12 text-center">
-            <h1 class="display-4 fw-bold mb-3 text-white">
-                About JK Store
-            </h1>
-            <p class="lead text-white">Delivering excellence since 2020</p>
-        </div>
-    </div>
 
-    <div class="row mb-5 fade-in-up" style="animation-delay: 0.1s;">
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 h-100">
-                <div class="card-body p-5">
-                    <h2 class="fw-bold mb-4">Our Story</h2>
-                    <p class="text-muted mb-3">Founded in 2020, JK Store has been at the forefront of innovation, delivering exceptional products and services to customers worldwide.</p>
-                    <p class="text-muted mb-3">Our mission is to empower individuals and businesses through cutting-edge solutions that make a real difference in their daily lives.</p>
-                    <p class="text-muted">With a team of dedicated professionals and a commitment to excellence, we continue to push boundaries and set new standards in our industry.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-lg-6 mb-4">
-            <div class="card border-0 h-100">
-                <div class="card-body p-5">
-                    <h2 class="fw-bold mb-4">Our Values</h2>
-                    <div class="mb-3">
-                        <h5 class="fw-bold">Innovation</h5>
-                        <p class="text-muted">We constantly evolve and adapt to meet changing needs.</p>
-                    </div>
-                    <div class="mb-3">
-                        <h5 class="fw-bold">Quality</h5>
-                        <p class="text-muted">Excellence is not an option, it's our standard.</p>
-                    </div>
-                    <div class="mb-3">
-                        <h5 class="fw-bold">Customer Focus</h5>
-                        <p class="text-muted">Your success is our success.</p>
-                    </div>
-                </div>
+<!-- Page Header -->
+<section class="py-5" style="background: linear-gradient(135deg, var(--cafe-primary) 0%, var(--cafe-primary-dark) 100%);">
+    <div class="container">
+        <div class="row justify-content-center text-center text-white">
+            <div class="col-lg-8 animate-fade-in-up">
+                <h1 class="fw-bold mb-3">About Cloud 9 Cafe</h1>
+                <p class="lead opacity-75 mb-0">Brewing happiness, one cup at a time since 2020</p>
             </div>
         </div>
     </div>
+</section>
 
-    <div class="row mb-5 fade-in-up" style="animation-delay: 0.2s;">
-        <div class="col-12">
-            <div class="card border-0 text-center p-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                <div class="card-body">
-                    <h2 class="fw-bold mb-4">Our Team</h2>
-                    <p class="lead mb-5">Meet the talented individuals behind JK Store</p>
-                    <div class="row g-4">
-                        <div class="col-md-4">
-                            <div class="text-center">
-                                <div class="mb-3">
-                                    <div class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
-                                        <span class="display-6" style="color: #667eea;">JD</span>
-                                    </div>
-                                </div>
-                                <h5 class="fw-bold">John Doe</h5>
-                                <p class="opacity-75">CEO & Founder</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center">
-                                <div class="mb-3">
-                                    <div class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
-                                        <span class="display-6" style="color: #667eea;">JS</span>
-                                    </div>
-                                </div>
-                                <h5 class="fw-bold">Jane Smith</h5>
-                                <p class="opacity-75">CTO</p>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="text-center">
-                                <div class="mb-3">
-                                    <div class="rounded-circle bg-white d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
-                                        <span class="display-6" style="color: #667eea;">MJ</span>
-                                    </div>
-                                </div>
-                                <h5 class="fw-bold">Mike Johnson</h5>
-                                <p class="opacity-75">Head of Design</p>
-                            </div>
-                        </div>
+<!-- Our Story Section -->
+<section class="py-5" style="background: var(--bg-cream);">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 animate-on-scroll">
+                <div class="position-relative">
+                    <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800" 
+                         alt="Cloud 9 Cafe Interior" 
+                         class="img-fluid rounded-4 shadow-lg" 
+                         style="height: 400px; object-fit: cover; width: 100%;">
+                    <div class="position-absolute bottom-0 end-0 bg-accent text-dark p-4 rounded-4 m-3" style="max-width: 200px;">
+                        <h3 class="fw-bold mb-0">4+</h3>
+                        <p class="mb-0">Years of Excellence</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 animate-on-scroll stagger-1">
+                <span class="badge bg-primary bg-opacity-10 text-primary mb-3">Our Story</span>
+                <h2 class="fw-bold mb-4">A Journey Fueled by Passion for Coffee</h2>
+                <p class="text-muted mb-3">
+                    Founded in 2020, Cloud 9 Cafe began with a simple mission: to create a welcoming space where 
+                    coffee lovers could experience the finest brews in a cozy, inviting atmosphere. What started 
+                    as a small corner shop has grown into a beloved community hub.
+                </p>
+                <p class="text-muted mb-3">
+                    We source our beans directly from sustainable farms in Colombia, Ethiopia, and Brazil, 
+                    ensuring every cup tells a story of quality and care. Our expert baristas are trained 
+                    in the art of coffee-making, from the perfect espresso pull to beautiful latte art.
+                </p>
+                <p class="text-muted">
+                    Beyond coffee, we offer a curated selection of handcrafted pastries, sandwiches, and 
+                    desserts - all made fresh daily with locally sourced ingredients.
+                </p>
+                
+                <div class="row g-3 mt-4">
+                    <div class="col-4 text-center">
+                        <h4 class="fw-bold text-primary">15K+</h4>
+                        <small class="text-muted">Happy Customers</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <h4 class="fw-bold text-primary">50+</h4>
+                        <small class="text-muted">Menu Items</small>
+                    </div>
+                    <div class="col-4 text-center">
+                        <h4 class="fw-bold text-primary">4.9</h4>
+                        <small class="text-muted">Rating</small>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
+
+<!-- Our Values Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5 animate-on-scroll">
+            <span class="badge bg-primary bg-opacity-10 text-primary mb-3">Why Choose Us</span>
+            <h2 class="fw-bold">Our Values</h2>
+            <p class="text-muted max-w-600 mx-auto">The principles that guide everything we do</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4 animate-on-scroll stagger-1">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="mx-auto mb-4" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--cafe-primary) 0%, var(--cafe-primary-dark) 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-seedling fa-2x text-white"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Sustainability</h4>
+                    <p class="text-muted mb-0">We partner with eco-conscious farms and use biodegradable packaging to minimize our environmental footprint.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 animate-on-scroll stagger-2">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="mx-auto mb-4" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--cafe-accent) 0%, #E8C9A0 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-gem fa-2x text-white"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Quality First</h4>
+                    <p class="text-muted mb-0">From bean to cup, we never compromise on quality. Every ingredient is carefully selected and every dish prepared with love.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-4 animate-on-scroll stagger-3">
+                <div class="card h-100 border-0 shadow-sm text-center p-4">
+                    <div class="mx-auto mb-4" style="width: 80px; height: 80px; background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-heart fa-2x text-white"></i>
+                    </div>
+                    <h4 class="fw-bold mb-3">Community</h4>
+                    <p class="text-muted mb-0">We're more than a cafe - we're a gathering place for friends, families, and coffee enthusiasts to connect.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Team Section -->
+<section class="py-5" style="background: white;">
+    <div class="container">
+        <div class="text-center mb-5 animate-on-scroll">
+            <span class="badge bg-primary bg-opacity-10 text-primary mb-3">Our Team</span>
+            <h2 class="fw-bold">Meet the People Behind the Magic</h2>
+            <p class="text-muted">Passionate individuals dedicated to your perfect coffee experience</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4 animate-on-scroll stagger-1">
+                <div class="card border-0 shadow-sm text-center h-100">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--cafe-primary) 0%, var(--cafe-primary-dark) 100%); color: white; font-size: 2.5rem; font-weight: bold;">
+                                SC
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-1">Sarah Chen</h4>
+                        <p class="text-primary mb-3">Founder & Head Barista</p>
+                        <p class="text-muted small mb-0">Coffee enthusiast with 10+ years of experience in specialty coffee. Certified Q Grader and latte art champion.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 animate-on-scroll stagger-2">
+                <div class="card border-0 shadow-sm text-center h-100">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--cafe-accent) 0%, #E8C9A0 100%); color: white; font-size: 2.5rem; font-weight: bold;">
+                                MR
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-1">Marcus Rodriguez</h4>
+                        <p class="text-primary mb-3">Executive Chef</p>
+                        <p class="text-muted small mb-0">Culinary expert crafting our delicious pastries and sandwiches. Previously worked at Michelin-starred restaurants.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 animate-on-scroll stagger-3">
+                <div class="card border-0 shadow-sm text-center h-100">
+                    <div class="card-body p-4">
+                        <div class="mb-4">
+                            <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%); color: white; font-size: 2.5rem; font-weight: bold;">
+                                EK
+                            </div>
+                        </div>
+                        <h4 class="fw-bold mb-1">Emily Kim</h4>
+                        <p class="text-primary mb-3">Operations Manager</p>
+                        <p class="text-muted small mb-0">Ensures every customer has a delightful experience. Expert in customer service and team management.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contact CTA Section -->
+<section class="py-5" style="background: linear-gradient(135deg, var(--cafe-primary) 0%, var(--cafe-primary-dark) 100%);">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 text-white mb-4 mb-lg-0 animate-on-scroll">
+                <h2 class="fw-bold mb-3">Visit Us Today!</h2>
+                <p class="lead opacity-75 mb-0">Experience the Cloud 9 difference. Great coffee, delicious food, and a warm atmosphere await you.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end animate-on-scroll stagger-1">
+                <a href="contact.php" class="btn btn-accent btn-lg">
+                    <i class="fas fa-map-marker-alt me-2"></i>Find Us
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .max-w-600 {
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+</style>
+
 <?php
 $content = ob_get_clean();
 include '../includes/layout.php';

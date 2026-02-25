@@ -92,12 +92,30 @@ ob_start();
             ?>
             <div class="col-md-6 col-lg-4 col-xl-3 animate-on-scroll stagger-<?php echo $delay; ?>">
                 <div class="card product-card card-hover h-100">
-                    <div class="product-image">
-                        <?php if ($item['image']): ?>
-                        <img src="../../assets/images/<?php echo $item['image']; ?>" alt="<?php echo htmlspecialchars($item['name']); ?>">
-                        <?php else: ?>
-                        <img src="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400" alt="Coffee">
+                    <div class="product-image" style="position: relative;">
+                        <?php 
+                        // Check image in priority order: new path -> old path -> placeholder
+                        $image_path = '';
+                        if ($item['image']) {
+                            if (file_exists("../../assets/uploads/menu_images/{$item['id']}/" . basename($item['image']))) {
+                                $image_path = "../../assets/uploads/menu_images/{$item['id']}/" . basename($item['image']);
+                            } elseif (file_exists("../../assets/images/{$item['image']}")) {
+                                $image_path = "../../assets/images/{$item['image']}";
+                            }
+                        }
+                        ?>
+                        <?php if ($image_path): ?>
+                        <img src="<?php echo $image_path; ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" 
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
                         <?php endif; ?>
+                        <!-- Placeholder shown when no image or on error -->
+                        <div class="product-placeholder" style="display: <?php echo $image_path ? 'none' : 'flex'; ?>; 
+                             position: absolute; top: 0; left: 0; right: 0; bottom: 0; 
+                             background: linear-gradient(135deg, var(--cafe-primary-light) 0%, var(--cafe-primary) 100%);
+                             align-items: center; justify-content: center; flex-direction: column;">
+                            <i class="fas fa-coffee fa-4x text-white mb-2"></i>
+                            <span class="text-white small">Cloud 9 Cafe</span>
+                        </div>
                         <div class="product-overlay">
                             <form method="POST" action="../../user/cart.php" class="d-inline">
                                 <input type="hidden" name="item_id" value="<?php echo $item['id']; ?>">
@@ -129,7 +147,7 @@ ob_start();
                             <?php echo htmlspecialchars($item['description']); ?>
                         </p>
                         <div class="d-flex justify-content-between align-items-center">
-                            <span class="product-price">$<?php echo number_format($item['price'], 2); ?></span>
+                            <span class="product-price">₹<?php echo number_format($item['price'], 2); ?></span>
                             <a href="menu_item_detail.php?id=<?php echo $item['id']; ?>" class="btn btn-sm btn-outline-primary rounded-pill">
                                 Details <i class="fas fa-arrow-right ms-1"></i>
                             </a>

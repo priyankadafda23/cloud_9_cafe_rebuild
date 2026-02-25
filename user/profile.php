@@ -1,14 +1,113 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+require_once '../config/db_config.php';
+
 // Check if user is logged in using cafe_user_id
 if (!isset($_SESSION['cafe_user_id'])) {
     header("Location: login.php");
     exit();
 }
+
+$user_id = $_SESSION['cafe_user_id'];
+$success = '';
+$error = '';
+
+// Get user data
+$user_query = mysqli_query($con, "SELECT * FROM cafe_users WHERE id = $user_id");
+$user = mysqli_fetch_assoc($user_query);
+
+// Get user stats
+$orders_count = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) as count FROM cafe_orders WHERE user_id = $user_id"))['count'];
+$wishlist_count = 0; // Update when wishlist table exists
+$addresses_count = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) as count FROM user_addresses WHERE user_id = $user_id"))['count'];
+
+// Helper function to create safe folder name
+function createSafeFolderName($name) {
+    // Replace spaces with underscores, remove special characters
+    $safe = preg_replace('/[^a-zA-Z0-9_\-]/', '_', $name);
+    // Remove multiple underscores
+    $safe = preg_replace('/_+/', '_', $safe);
+    // Trim underscores from ends
+    $safe = trim($safe, '_');
+    return $safe;
+}
+
+// Handle profile update
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
+    $fullname = mysqli_real_escape_string($con, $_POST['fullname']);
+    $email = mysqli_real_escape_string($con, $_POST['email']);
+    $mobile = mysqli_real_escape_string($con, $_POST['mobile']);
+    $gender = mysqli_real_escape_string($con, $_POST['gender']);
+    
+    // Check if email already exists for another user
+    $email_check = mysqli_query($con, "SELECT id FROM cafe_users WHERE email = '$email' AND id != $user_id");
+    if (mysqli_num_rows($email_check) > 0) {
+        $error = 'Email already exists!';
+    } else {
+        // Handle profile picture upload
+        $profile_picture = $user['profile_picture'];
+        if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
+            // Create user-specific folder: assets/uploads/Profile/{client_name}/
+            $safe_name = createSafeFolderName($fullname);
+            $user_folder = $safe_name . '_' . $user_id; // Add user_id to make it unique
+            $upload_dir = '../assets/uploads/Profile/' . $user_folder . '/';
+            
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0755, true);
+            }
+            
+            // Get file extension
+            $file_info = pathinfo($_FILES['profile_picture']['name']);
+            $extension = strtolower($file_info['extension']);
+            
+            // Validate allowed extensions
+            $allowed = ['jpg', 'jpeg', 'png', 'gif'];
+            if (in_array($extension, $allowed)) {
+                // Delete old profile picture if exists
+                if ($user['profile_picture'] && file_exists('../' . $user['profile_picture'])) {
+                    unlink('../' . $user['profile_picture']);
+                }
+                
+                // Save with standardized name: profile_picture.{extension}
+                $filename = 'profile_picture.' . $extension;
+                $target_path = $upload_dir . $filename;
+                
+                if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target_path)) {
+                    // Store relative path in database
+                    $profile_picture = 'assets/uploads/Profile/' . $user_folder . '/' . $filename;
+                }
+            } else {
+                $error = 'Invalid file type. Only JPG, PNG, and GIF allowed.';
+            }
+        }
+        
+        $update_query = "UPDATE cafe_users SET 
+                        fullname = '$fullname', 
+                        email = '$email', 
+                        mobile = '$mobile', 
+                        gender = '$gender',
+                        profile_picture = '$profile_picture'
+                        WHERE id = $user_id";
+        
+        if (mysqli_query($con, $update_query)) {
+            $_SESSION['cafe_user_name'] = $fullname;
+            $success = 'Profile updated successfully!';
+            // Refresh user data
+            $user_query = mysqli_query($con, "SELECT * FROM cafe_users WHERE id = $user_id");
+            $user = mysqli_fetch_assoc($user_query);
+        } else {
+            $error = 'Failed to update profile. Please try again.';
+        }
+    }
+}
+
 $title = "My Profile - Cloud 9 Cafe";
 $active_sidebar = 'profile';
 ob_start();
 ?>
+
 <style>
     .profile-header-card {
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.0));
@@ -22,7 +121,7 @@ ob_start();
 
     .profile-cover {
         height: 200px;
-        background: var(--primary-gradient);
+        background: var(--gradient-primary);
         position: relative;
     }
 
@@ -59,7 +158,7 @@ ob_start();
     .stat-value {
         font-size: 1.5rem;
         font-weight: 700;
-        color: #667eea;
+        color: white;
     }
 
     .stat-label {
@@ -83,7 +182,7 @@ ob_start();
         border-radius: 12px;
         padding: 0.75rem 1.5rem;
         font-weight: 600;
-        color: #667eea;
+        color: var(--cafe-primary);
         border: none;
         transition: all 0.3s ease;
     }
@@ -96,19 +195,22 @@ ob_start();
     .edit-icon {
         width: 40px;
         height: 40px;
-        border-radius: 3px;
-        background: rgba(102, 126, 234, 0.1);
-        color: #667eea;
+        border-radius: 50%;
+        background: rgba(107, 79, 75, 0.8);
+        color: white;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
         transition: all 0.3s ease;
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        border: 2px solid white;
     }
 
     .edit-icon:hover {
-        background: #667eea;
-        color: white;
+        background: var(--cafe-primary);
     }
 
     .profile-info-row {
@@ -119,43 +221,48 @@ ob_start();
     .profile-info-row:last-child {
         border-bottom: none;
     }
-
-    .glass-card {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.5);
-    }
 </style>
+
+<!-- Success/Error Messages -->
+<?php if ($success): ?>
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="fas fa-check-circle me-2"></i><?php echo $success; ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
+
+<?php if ($error): ?>
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <i class="fas fa-exclamation-circle me-2"></i><?php echo $error; ?>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+<?php endif; ?>
 
 <div class="profile-header-card mb-4">
     <div class="profile-cover">
         <div class="profile-avatar">
-            <img src="../assets/images/profile_pictures/default.png" alt="Profile" id="profileImage">
-            <div class="edit-icon position-absolute bottom-0 end-0 m-2" onclick="document.getElementById('profileInput').click()">
-                <i class="fas fa-camera"></i>
-            </div>
-            <input type="file" id="profileInput" hidden accept="image/*">
+            <img src="<?php echo $user['profile_picture'] ? '../' . $user['profile_picture'] : '../assets/uploads/Profile/default.png'; ?>" 
+                 alt="Profile" id="profileImage">
         </div>
     </div>
     <div class="p-4 pt-5">
         <div class="row align-items-end">
             <div class="col-md-6">
-                <h3 class="fw-bold mb-1">John Doe</h3>
-                <p class="text-muted mb-0"><i class="fas fa-envelope me-2"></i>john.doe@example.com</p>
+                <h3 class="fw-bold mb-1"><?php echo htmlspecialchars($user['fullname']); ?></h3>
+                <p class="text-muted mb-0"><i class="fas fa-envelope me-2"></i><?php echo htmlspecialchars($user['email']); ?></p>
             </div>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
                 <div class="profile-stats d-inline-flex gap-4">
                     <div class="stat-item">
-                        <div class="stat-value">12</div>
+                        <div class="stat-value"><?php echo $orders_count; ?></div>
                         <div class="stat-label">Orders</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value">5</div>
+                        <div class="stat-value"><?php echo $wishlist_count; ?></div>
                         <div class="stat-label">Wishlist</div>
                     </div>
                     <div class="stat-item">
-                        <div class="stat-value">3</div>
+                        <div class="stat-value"><?php echo $addresses_count; ?></div>
                         <div class="stat-label">Addresses</div>
                     </div>
                 </div>
@@ -166,10 +273,10 @@ ob_start();
 
 <div class="row g-4">
     <div class="col-md-6">
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white/50 backdrop-blur">
+        <div class="card border-0 shadow-sm rounded-4 p-4">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h5 class="fw-bold mb-0">
-                    <i class="fas fa-user-circle me-2" style="color: #667eea;"></i>Personal Information
+                    <i class="fas fa-user-circle me-2 text-primary"></i>Personal Information
                 </h5>
                 <button class="edit-btn" data-bs-toggle="modal" data-bs-target="#editProfileModal">
                     <i class="fas fa-pen me-2"></i>Edit
@@ -179,31 +286,31 @@ ob_start();
             <div class="profile-info-row">
                 <div class="d-flex justify-content-between">
                     <span class="text-muted">Full Name</span>
-                    <span class="fw-semibold">John Doe</span>
+                    <span class="fw-semibold"><?php echo htmlspecialchars($user['fullname']); ?></span>
                 </div>
             </div>
             <div class="profile-info-row">
                 <div class="d-flex justify-content-between">
                     <span class="text-muted">Email</span>
-                    <span class="fw-semibold">john.doe@example.com</span>
+                    <span class="fw-semibold"><?php echo htmlspecialchars($user['email']); ?></span>
                 </div>
             </div>
             <div class="profile-info-row">
                 <div class="d-flex justify-content-between">
                     <span class="text-muted">Phone</span>
-                    <span class="fw-semibold">+1 234 567 890</span>
-                </div>
-            </div>
-            <div class="profile-info-row">
-                <div class="d-flex justify-content-between">
-                    <span class="text-muted">Date of Birth</span>
-                    <span class="fw-semibold">Jan 1, 1990</span>
+                    <span class="fw-semibold"><?php echo $user['mobile'] ? htmlspecialchars($user['mobile']) : 'Not set'; ?></span>
                 </div>
             </div>
             <div class="profile-info-row">
                 <div class="d-flex justify-content-between">
                     <span class="text-muted">Gender</span>
-                    <span class="fw-semibold">Male</span>
+                    <span class="fw-semibold text-capitalize"><?php echo $user['gender'] ? htmlspecialchars($user['gender']) : 'Not set'; ?></span>
+                </div>
+            </div>
+            <div class="profile-info-row">
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Member Since</span>
+                    <span class="fw-semibold"><?php echo date('M d, Y', strtotime($user['created_at'])); ?></span>
                 </div>
             </div>
         </div>
@@ -212,46 +319,45 @@ ob_start();
     <div class="col-md-6">
         <div class="card border-0 shadow-sm rounded-4 p-4 h-100">
             <h5 class="fw-bold mb-4">
-                <i class="fas fa-shield-alt me-2" style="color: #667eea;"></i>Account Security
+                <i class="fas fa-shield-alt me-2 text-primary"></i>Account Security
             </h5>
 
-            <div class="d-flex align-items-center p-3 mb-3 rounded-3" style="background: rgba(102, 126, 234, 0.05);">
+            <div class="d-flex align-items-center p-3 mb-3 rounded-3 bg-light">
                 <div class="flex-shrink-0">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(102, 126, 234, 0.1);">
-                        <i class="fas fa-lock" style="color: #667eea;"></i>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(107, 79, 75, 0.1);">
+                        <i class="fas fa-lock text-primary"></i>
                     </div>
                 </div>
                 <div class="flex-grow-1 ms-3">
                     <h6 class="fw-bold mb-0">Password</h6>
-                    <p class="text-muted small mb-0">Last changed 3 months ago</p>
+                    <p class="text-muted small mb-0">Change your account password</p>
                 </div>
                 <a href="change_password.php" class="btn btn-outline-primary btn-sm rounded-pill">Change</a>
             </div>
 
-            <div class="d-flex align-items-center p-3 mb-3 rounded-3" style="background: rgba(102, 126, 234, 0.05);">
+            <div class="d-flex align-items-center p-3 mb-3 rounded-3 bg-light">
                 <div class="flex-shrink-0">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(102, 126, 234, 0.1);">
-                        <i class="fas fa-mobile-alt" style="color: #667eea;"></i>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(107, 79, 75, 0.1);">
+                        <i class="fas fa-map-marker-alt text-primary"></i>
                     </div>
                 </div>
                 <div class="flex-grow-1 ms-3">
-                    <h6 class="fw-bold mb-0">Two-Factor Auth</h6>
-                    <p class="text-muted small mb-0">Not enabled</p>
+                    <h6 class="fw-bold mb-0">Addresses</h6>
+                    <p class="text-muted small mb-0">Manage delivery addresses</p>
                 </div>
-                <button class="btn btn-outline-primary btn-sm rounded-pill">Enable</button>
+                <a href="addresses.php" class="btn btn-outline-primary btn-sm rounded-pill">Manage</a>
             </div>
 
-            <div class="d-flex align-items-center p-3 rounded-3" style="background: rgba(102, 126, 234, 0.05);">
+            <div class="d-flex align-items-center p-3 rounded-3 bg-light">
                 <div class="flex-shrink-0">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(102, 126, 234, 0.1);">
-                        <i class="fas fa-history" style="color: #667eea;"></i>
+                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; background: rgba(107, 79, 75, 0.1);">
+                        <i class="fas fa-crown text-warning"></i>
                     </div>
                 </div>
                 <div class="flex-grow-1 ms-3">
-                    <h6 class="fw-bold mb-0">Login History</h6>
-                    <p class="text-muted small mb-0">Last login: Today, 10:30 AM</p>
+                    <h6 class="fw-bold mb-0">Reward Points</h6>
+                    <p class="text-muted small mb-0">You have <strong><?php echo $user['reward_points']; ?></strong> points</p>
                 </div>
-                <button class="btn btn-link text-decoration-none" style="color: #667eea;">View</button>
             </div>
         </div>
     </div>
@@ -266,37 +372,63 @@ ob_start();
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <form id="editProfileForm">
+                <form method="POST" enctype="multipart/form-data">
+                    <input type="hidden" name="update_profile" value="1">
+                    
                     <div class="text-center mb-4">
                         <div class="position-relative d-inline-block">
-                            <img src="../assets/images/profile_pictures/default.png" alt="Profile" class="rounded-circle" style="width: 150px; height: 150px; border: 4px solid #f8f9fa;">
-                            <button type="button" class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0" style="width: 40px; height: 40px;">
+                            <img src="<?php echo $user['profile_picture'] ? '../' . $user['profile_picture'] : '../assets/uploads/Profile/default.png'; ?>" 
+                                 alt="Profile" class="rounded-circle" style="width: 120px; height: 120px; border: 4px solid #f8f9fa; object-fit: cover;" id="modalProfilePreview">
+                            <label for="profile_picture" class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0" style="width: 36px; height: 36px; cursor: pointer;">
                                 <i class="fas fa-camera"></i>
-                            </button>
+                            </label>
+                            <input type="file" name="profile_picture" id="profile_picture" hidden accept="image/*" onchange="previewImage(this)">
                         </div>
+                        <p class="text-muted small mt-2">Click camera to change photo</p>
                     </div>
+                    
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Full Name</label>
-                        <input type="text" class="form-control form-control-lg" value="John Doe">
+                        <input type="text" name="fullname" class="form-control" value="<?php echo htmlspecialchars($user['fullname']); ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Email</label>
-                        <input type="email" class="form-control form-control-lg" value="john.doe@example.com">
+                        <input type="email" name="email" class="form-control" value="<?php echo htmlspecialchars($user['email']); ?>" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Phone</label>
-                        <input type="tel" class="form-control form-control-lg" value="+1 234 567 890">
+                        <input type="tel" name="mobile" class="form-control" value="<?php echo htmlspecialchars($user['mobile'] ?? ''); ?>">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Date of Birth</label>
-                        <input type="date" class="form-control form-control-lg" value="1990-01-01">
+                        <label class="form-label fw-semibold">Gender</label>
+                        <select name="gender" class="form-select">
+                            <option value="">Select Gender</option>
+                            <option value="male" <?php echo $user['gender'] == 'male' ? 'selected' : ''; ?>>Male</option>
+                            <option value="female" <?php echo $user['gender'] == 'female' ? 'selected' : ''; ?>>Female</option>
+                            <option value="other" <?php echo $user['gender'] == 'other' ? 'selected' : ''; ?>>Other</option>
+                        </select>
                     </div>
-                    <button type="submit" class="btn btn-gradient w-100 btn-lg">Save Changes</button>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save me-2"></i>Save Changes
+                    </button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('modalProfilePreview').src = e.target.result;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
 
 <?php
 $dashboard_content = ob_get_clean();

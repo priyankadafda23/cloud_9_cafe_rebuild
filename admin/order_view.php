@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
@@ -177,15 +179,15 @@ ob_start();
                                     </div>
                                 </td>
                                 <td class="text-center"><?php echo $item['quantity']; ?></td>
-                                <td class="text-end">$<?php echo number_format($item['unit_price'], 2); ?></td>
-                                <td class="text-end pe-4 fw-bold">$<?php echo number_format($item['subtotal'], 2); ?></td>
+                                <td class="text-end">₹<?php echo number_format($item['unit_price'], 2); ?></td>
+                                <td class="text-end pe-4 fw-bold">₹<?php echo number_format($item['subtotal'], 2); ?></td>
                             </tr>
                             <?php endwhile; ?>
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
                                 <td colspan="3" class="text-end pe-4"><strong>Total Amount:</strong></td>
-                                <td class="text-end pe-4"><h5 class="fw-bold mb-0">$<?php echo number_format($order['total_amount'], 2); ?></h5></td>
+                                <td class="text-end pe-4"><h5 class="fw-bold mb-0">₹<?php echo number_format($order['total_amount'], 2); ?></h5></td>
                             </tr>
                         </tfoot>
                     </table>

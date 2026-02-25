@@ -116,10 +116,10 @@ ob_start();
         <div class="row g-4">
             <?php
             $popular_items = [
-                ['name' => 'Caramel Macchiato', 'price' => '$5.50', 'category' => 'Coffee', 'image' => 'https://images.unsplash.com/photo-1485808191679-5f86510681a2?w=400'],
-                ['name' => 'Cappuccino', 'price' => '$4.50', 'category' => 'Coffee', 'image' => 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400'],
-                ['name' => 'Chocolate Croissant', 'price' => '$3.50', 'category' => 'Snack', 'image' => 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400'],
-                ['name' => 'Cheesecake', 'price' => '$5.00', 'category' => 'Dessert', 'image' => 'https://images.unsplash.com/photo-1524351199678-941a58a3df26?w=400'],
+                ['name' => 'Caramel Macchiato', 'price' => '₹450', 'category' => 'Coffee', 'image' => 'https://images.unsplash.com/photo-1485808191679-5f86510681a2?w=400'],
+                ['name' => 'Cappuccino', 'price' => '₹380', 'category' => 'Coffee', 'image' => 'https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=400'],
+                ['name' => 'Chocolate Croissant', 'price' => '₹280', 'category' => 'Snack', 'image' => 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=400'],
+                ['name' => 'Cheesecake', 'price' => '₹420', 'category' => 'Dessert', 'image' => 'https://images.unsplash.com/photo-1524351199678-941a58a3df26?w=400'],
             ];
             
             foreach ($popular_items as $index => $item):
@@ -127,7 +127,11 @@ ob_start();
             <div class="col-md-6 col-lg-3 animate-on-scroll stagger-<?php echo $index + 1; ?>">
                 <div class="card product-card card-hover h-100">
                     <div class="product-image">
-                        <img src="<?php echo $item['image']; ?>" alt="<?php echo $item['name']; ?>">
+                        <img src="<?php echo $item['image']; ?>" alt="<?php echo $item['name']; ?>" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="product-placeholder" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, var(--cafe-primary-light) 0%, var(--cafe-primary) 100%); align-items: center; justify-content: center; flex-direction: column;">
+                            <i class="fas fa-coffee fa-3x text-white mb-2"></i>
+                            <span class="text-white small"><?php echo $item['category']; ?></span>
+                        </div>
                         <div class="product-overlay">
                             <a href="menu/menu.php" class="btn btn-light rounded-pill">
                                 <i class="fas fa-plus me-1"></i> Add to Cart
@@ -151,29 +155,6 @@ ob_start();
                 </div>
             </div>
             <?php endforeach; ?>
-        </div>
-    </div>
-</section>
-
-<!-- Offers Banner -->
-<section class="py-5 my-5">
-    <div class="container">
-        <div class="card border-0 overflow-hidden" style="background: linear-gradient(135deg, var(--cafe-primary) 0%, var(--cafe-primary-dark) 100%);">
-            <div class="card-body p-5">
-                <div class="row align-items-center">
-                    <div class="col-lg-8 text-white animate-on-scroll">
-                        <span class="badge bg-accent text-dark mb-3">Limited Time</span>
-                        <h2 class="fw-bold mb-3">Get 20% Off Your First Order!</h2>
-                        <p class="mb-4 opacity-75">Use code <strong class="text-accent">WELCOME20</strong> at checkout. Valid for new customers only.</p>
-                        <a href="menu/menu.php" class="btn btn-accent btn-lg">
-                            Order Now <i class="fas fa-arrow-right ms-2"></i>
-                        </a>
-                    </div>
-                    <div class="col-lg-4 d-none d-lg-block text-center animate-on-scroll">
-                        <i class="fas fa-mug-hot fa-6x text-white opacity-25"></i>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </section>

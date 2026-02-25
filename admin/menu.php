@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
@@ -146,11 +148,22 @@ ob_start();
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
-                                    <?php if ($item['image']): ?>
-                                    <img src="../assets/images/<?php echo $item['image']; ?>" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
+                                    <?php 
+                                    // Check image in priority order: new path -> old path -> placeholder
+                                    $image_path = '';
+                                    if ($item['image']) {
+                                        if (file_exists("../{$item['image']}")) {
+                                            $image_path = "../{$item['image']}";
+                                        } elseif (file_exists("../assets/images/{$item['image']}")) {
+                                            $image_path = "../assets/images/{$item['image']}";
+                                        }
+                                    }
+                                    ?>
+                                    <?php if ($image_path): ?>
+                                    <img src="<?php echo $image_path; ?>" alt="" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">
                                     <?php else: ?>
-                                    <div class="bg-light d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border-radius: 8px;">
-                                        <i class="fas fa-image text-muted"></i>
+                                    <div class="d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; border-radius: 8px; background: linear-gradient(135deg, var(--cafe-primary-light) 0%, var(--cafe-primary) 100%);">
+                                        <i class="fas fa-coffee text-white"></i>
                                     </div>
                                     <?php endif; ?>
                                 </div>
@@ -166,7 +179,7 @@ ob_start();
                             </span>
                         </td>
                         <td>
-                            <span class="fw-bold">$<?php echo number_format($item['price'], 2); ?></span>
+                            <span class="fw-bold">₹<?php echo number_format($item['price'], 2); ?></span>
                         </td>
                         <td>
                             <span class="<?php echo $item['stock_quantity'] < 10 ? 'text-danger fw-bold' : ''; ?>">

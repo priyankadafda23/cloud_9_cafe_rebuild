@@ -1,11 +1,20 @@
 <?php
-session_start();
+// Only start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Check if user is logged in
 if (!isset($_SESSION['cafe_user_id'])) {
     header("Location: ../auth/login.php");
     exit();
 }
+
+// Include database and fetch user data
+require_once __DIR__ . '/../config/db_config.php';
+$user_id = $_SESSION['cafe_user_id'];
+$user_query = mysqli_query($con, "SELECT * FROM cafe_users WHERE id = $user_id");
+$current_user = mysqli_fetch_assoc($user_query);
 
 // Default active sidebar item if not set
 if (!isset($active_sidebar)) {
@@ -319,9 +328,10 @@ ob_start();
             </div>
             
             <div class="user-profile-summary">
-                <img src="../assets/images/profile_pictures/default.png" alt="User" class="user-avatar" onerror="this.src='https://via.placeholder.com/56'">
+                <img src="<?php echo $current_user['profile_picture'] ? '/' . $current_user['profile_picture'] : '/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'; ?>" 
+                     alt="User" class="user-avatar" onerror="this.src='/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'">
                 <div class="user-info">
-                    <h6 class="mb-0"><?php echo $_SESSION['cafe_user_name'] ?? 'User'; ?></h6>
+                    <h6 class="mb-0"><?php echo htmlspecialchars($current_user['fullname'] ?? 'User'); ?></h6>
                     <small>Member</small>
                 </div>
             </div>

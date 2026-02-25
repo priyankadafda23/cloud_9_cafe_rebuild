@@ -1,6 +1,17 @@
 <?php
-session_start();
-include_once("config/db_config.php");
+// Only start session if not already started
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+include_once(__DIR__ . "/../config/db_config.php");
+
+// Fetch current user data if logged in
+$current_user_data = null;
+if (isset($_SESSION['cafe_user_id'])) {
+    $uid = $_SESSION['cafe_user_id'];
+    $user_result = mysqli_query($con, "SELECT * FROM cafe_users WHERE id = $uid");
+    $current_user_data = mysqli_fetch_assoc($user_result);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -190,11 +201,6 @@ include_once("config/db_config.php");
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'offers.php' ? 'active' : ''; ?>" href="/cloud_9_cafe_rebuild/pages/offers.php">
-                            <i class="fas fa-tag me-1 d-lg-none"></i>Offers
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'about.php' ? 'active' : ''; ?>" href="/cloud_9_cafe_rebuild/pages/about.php">
                             <i class="fas fa-info-circle me-1 d-lg-none"></i>About
                         </a>
@@ -219,8 +225,9 @@ include_once("config/db_config.php");
                         <!-- User Dropdown -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
-                                <img src="/cloud_9_cafe_rebuild/assets/images/profile_pictures/default.png" alt="Profile" class="nav-avatar">
-                                <span class="d-none d-lg-inline fw-medium"><?php echo $_SESSION['cafe_user_name'] ?? 'User'; ?></span>
+                                <img src="<?php echo ($current_user_data && $current_user_data['profile_picture']) ? '/' . $current_user_data['profile_picture'] : '/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'; ?>" 
+                                     alt="Profile" class="nav-avatar" onerror="this.src='/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'">
+                                <span class="d-none d-lg-inline fw-medium"><?php echo htmlspecialchars($current_user_data['fullname'] ?? 'User'); ?></span>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li><a class="dropdown-item" href="/cloud_9_cafe_rebuild/user/dashboard.php"><i class="fas fa-th-large me-2 text-primary"></i>Dashboard</a></li>
@@ -272,7 +279,6 @@ include_once("config/db_config.php");
                     <ul class="list-unstyled">
                         <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/index.php">Home</a></li>
                         <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/menu/menu.php">Menu</a></li>
-                        <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/offers.php">Offers</a></li>
                         <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/about.php">About Us</a></li>
                     </ul>
                 </div>

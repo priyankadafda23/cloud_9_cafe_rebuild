@@ -41,7 +41,7 @@ ob_start();
                     <span class="text-muted small border-end pe-3 me-3">4.5 Rating</span>
                     <span class="text-muted small">120 Reviews</span>
                 </div>
-                <h2 class="fw-bold text-primary mb-3">$299.99 <span class="text-muted text-decoration-line-through fs-5 ms-2">$350.00</span></h2>
+                <h2 class="fw-bold text-primary mb-3">₹24,999 <span class="text-muted text-decoration-line-through fs-5 ms-2">₹28,999</span></h2>
                 <p class="text-secondary lh-lg">Experience world-class noise cancellation, clearer calls, and longer battery life. Designed for comfort and built for sound, these headphones are perfect for travel, work, and play.</p>
             </div>
 

@@ -1,18 +1,34 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 include_once '../config/db_config.php';
 
-// Login processing - KEEP EXISTING LOGIC
+// Login processing
 if (isset($_POST['login_btn'])) {
     $email = $_POST['email'];
     $password = $_POST['password'];
     
-    // Query to check user credentials (using cafe_users table)
-    $query = "SELECT * FROM cafe_users WHERE email = '$email' AND password = '$password'";
-    $result = mysqli_query($con, $query);
+    // First check if it's an admin login (cafe_admins table)
+    $admin_query = "SELECT * FROM cafe_admins WHERE email = '$email' AND password = '$password'";
+    $admin_result = mysqli_query($con, $admin_query);
     
-    if (mysqli_num_rows($result) > 0) {
-        $user = mysqli_fetch_assoc($result);
+    if (mysqli_num_rows($admin_result) > 0) {
+        // Admin login successful
+        $admin = mysqli_fetch_assoc($admin_result);
+        $_SESSION['cafe_admin_id'] = $admin['id'];
+        $_SESSION['cafe_admin_name'] = $admin['fullname'];
+        $_SESSION['cafe_admin_role'] = $admin['role'];
+        header("Location: ../admin/dashboard.php");
+        exit();
+    }
+    
+    // If not admin, check regular user (cafe_users table)
+    $user_query = "SELECT * FROM cafe_users WHERE email = '$email' AND password = '$password'";
+    $user_result = mysqli_query($con, $user_query);
+    
+    if (mysqli_num_rows($user_result) > 0) {
+        $user = mysqli_fetch_assoc($user_result);
         // Set session variables with cafe_ prefix
         $_SESSION['cafe_user_id'] = $user['id'];
         $_SESSION['cafe_user_name'] = $user['fullname'];

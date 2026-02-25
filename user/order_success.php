@@ -3,7 +3,9 @@
  * Cloud 9 Cafe - Order Success Page
  */
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db_config.php';
 
 // Check if user is logged in
@@ -132,7 +134,7 @@ ob_start();
                                     <span class="fw-semibold"><?php echo htmlspecialchars($item['name']); ?></span>
                                     <small class="text-muted d-block">Qty: <?php echo $item['quantity']; ?></small>
                                 </div>
-                                <span class="fw-bold">$<?php echo number_format($item['subtotal'], 2); ?></span>
+                                <span class="fw-bold">₹<?php echo number_format($item['subtotal'], 2); ?></span>
                             </div>
                             <?php endwhile; ?>
                             
@@ -140,7 +142,7 @@ ob_start();
                             
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="fw-bold fs-5">Total</span>
-                                <span class="fw-bold fs-4" style="color: #667eea;">$<?php echo number_format($order['total_amount'], 2); ?></span>
+                                <span class="fw-bold fs-4" style="color: #667eea;">₹<?php echo number_format($order['total_amount'], 2); ?></span>
                             </div>
                         </div>
                     </div>

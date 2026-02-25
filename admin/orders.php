@@ -1,5 +1,7 @@
 <?php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
@@ -173,7 +175,7 @@ ob_start();
                                 <input type="hidden" name="update_payment" value="1">
                             </form>
                         </td>
-                        <td class="text-end fw-bold">$<?php echo number_format($order['total_amount'], 2); ?></td>
+                        <td class="text-end fw-bold">₹<?php echo number_format($order['total_amount'], 2); ?></td>
                         <td class="text-end pe-4">
                             <a href="order_view.php?id=<?php echo $order['id']; ?>" class="action-btn view" title="View Details">
                                 <i class="fas fa-eye"></i>
