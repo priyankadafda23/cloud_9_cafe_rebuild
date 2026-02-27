@@ -121,6 +121,25 @@ ob_start();
                         <p class="text-muted mb-0">Sign in to your Cloud 9 account</p>
                     </div>
                     
+                    <!-- Demo Credentials Info Box -->
+                    <div class="alert border-0 mb-4" style="background: var(--bg-cream);">
+                        <h6 class="fw-bold mb-2" style="color: var(--cafe-primary);">
+                            <i class="fas fa-info-circle me-2"></i>Demo Credentials
+                        </h6>
+                        <div class="row">
+                            <div class="col-6">
+                                <small class="fw-semibold d-block mb-1">Admin Login:</small>
+                                <small class="text-muted d-block">Email: admin@cloud9cafe.com</small>
+                                <small class="text-muted d-block">Pass: admin123</small>
+                            </div>
+                            <div class="col-6">
+                                <small class="fw-semibold d-block mb-1">User Login:</small>
+                                <small class="text-muted d-block">Email: user@cloud9cafe.com</small>
+                                <small class="text-muted d-block">Pass: user123</small>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Error Message Display - Shows only if $login_error exists -->
                     <?php if (isset($login_error)): ?>
                     <div class="alert alert-danger d-flex align-items-center" role="alert">

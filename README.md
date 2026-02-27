@@ -4,7 +4,7 @@
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap)](https://getbootstrap.com)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-> A modern, responsive web-based food ordering system for cafes and restaurants with user management, order tracking, and reward points system.
+> A modern, responsive web-based food ordering system for cafes and restaurants with user management, order tracking, and reward points system. Uses JSON files as database - no MySQL required!
 
 ---
 
@@ -17,21 +17,23 @@
 - 👤 Role-based access (Guest, User, Admin)
 - 🎁 Reward points system (+10 points per order)
 - 📱 Fully responsive design
-- 🔒 Secure authentication with session management
+- 🔒 Secure **cookie-based** authentication (no PHP sessions)
 - 📊 Admin dashboard with order analytics
+- 🛒 **AJAX Add to Cart** - Add items without page reload
+- 📁 **JSON Database** - No MySQL setup required
 
 ---
 
 ## ✨ Features
 
 ### Customer Features
-- **User Authentication** - Register, login, forgot password with OTP verification
+- **User Authentication** - Register, login with cookie-based auth
 - **Browse Menu** - View menu items with categories, prices, and images
-- **Shopping Cart** - Add items, update quantities, remove items
+- **Shopping Cart** - Add items via AJAX, update quantities, remove items
 - **Checkout Process** - Delivery address, order notes, payment method selection
 - **Order History** - View all past orders with status tracking
 - **Order Tracking** - Real-time status updates (Pending → Preparing → Completed)
-- **Reward Points** - Earn 10 points for every successful order
+- **Reward Points** - Earn 10 reward points for every successful order
 - **Wishlist** - Save favorite items for later
 - **Profile Management** - Update personal details and addresses
 
@@ -51,23 +53,32 @@
 
 | Module | Description | Location |
 |--------|-------------|----------|
-| **Authentication** | User/Admin login, registration, password reset | `auth/` |
+| **Authentication** | User/Admin login with cookie-based auth | `auth/` |
 | **Database** | JSON-based database operations (JsonDB class) | `config/JsonDB.php` |
 | **Token Auth** | Cookie-based authentication system | `config/TokenAuth.php` |
-| **Layout Engine** | Shared header/footer templates | `includes/layout.php` |
+| **Layout Engine** | Three separate layouts (Public, User Dashboard, Admin) | `includes/layout.php`, `includes/dashboard_layout.php`, `admin/admin_layout.php` |
 | **Order System** | Cart, checkout, order processing | `user/cart.php`, `user/checkout.php` |
 | **Admin Panel** | Backend management interface | `admin/` |
+| **API Endpoints** | AJAX handlers (Add to Cart) | `api/` |
 
-### Key Functions (`includes/functions.php`)
+### Key Functions (`config/TokenAuth.php`)
 
 ```php
-isLoggedIn()          // Check user authentication status
-getCurrentUserId()    // Get logged-in user ID
-getCurrentUserName()  // Get logged-in user name
-requireLogin()        // Enforce authentication
-formatPrice($price)   // Format price with ₹ symbol
-generateOrderNumber() // Generate unique order ID (ORD-YYYYMMDD-XXXX)
-sanitize($data)       // Clean user input
+$auth->isUserLoggedIn()    // Check if user is logged in
+$auth->isAdminLoggedIn()   // Check if admin is logged in
+$auth->getUserId()         // Get logged-in user ID
+$auth->getUserName()       // Get logged-in user name
+$auth->loginUser($id, $name, $role)    // Set user auth cookie
+$auth->loginAdmin($id, $name, $role)   // Set admin auth cookie
+$auth->logout()            // Clear auth cookie
+
+// JsonDB Functions
+$db->insert($table, $data)           // Insert new record
+$db->select($table, $where)          // Select records
+$db->selectOne($table, $where)       // Select single record
+$db->update($table, $data, $where)   // Update records
+$db->delete($table, $where)          // Delete records
+$db->count($table, $where)           // Count records
 ```
 
 ---
@@ -93,8 +104,11 @@ cloud_9_cafe_rebuild/
 │   ├── profile.php              # Admin profile
 │   └── admin_layout.php         # Admin layout template
 │
+├── 📁 api/                      # API endpoints
+│   └── add_to_cart.php          # AJAX endpoint for adding to cart
+│
 ├── 📁 auth/                     # Authentication files
-│   ├── login.php                # User login
+│   ├── login.php                # User login (with demo credentials)
 │   ├── register.php             # User registration
 │   ├── forgot_password.php      # Password reset request
 │   ├── reset_password.php       # Password reset form
@@ -104,17 +118,17 @@ cloud_9_cafe_rebuild/
 ├── 📁 config/                   # Configuration files
 │   ├── db_config.php            # Database & Auth initialization
 │   ├── JsonDB.php               # JSON database class
-│   ├── TokenAuth.php            # Authentication class
+│   ├── TokenAuth.php            # Cookie authentication class
 │   ├── Env.php                  # Environment loader
 │   └── check.php                # System check utility
 │
 ├── 📁 includes/                 # Shared components
-│   ├── layout.php               # Main layout (header/footer)
+│   ├── layout.php               # Main public layout
 │   ├── dashboard_layout.php     # User dashboard layout
 │   └── functions.php            # Common functions
 │
 ├── 📁 pages/                    # Public pages
-│   ├── index.php                # Homepage
+│   ├── index.php                # Homepage (with Popular Picks)
 │   ├── about.php                # About us
 │   ├── contact.php              # Contact form
 │   ├── faq.php                  # FAQ page
@@ -136,22 +150,28 @@ cloud_9_cafe_rebuild/
 ├── 📁 assets/                   # Static assets
 │   ├── css/
 │   │   ├── bootstrap*.css       # Bootstrap framework
-│   │   └── theme.css            # Custom theme styles
+│   │   ├── theme.css            # Custom theme styles
+│   │   └── layout/              # Layout-specific CSS files
+│   │       ├── layout.css       # Public layout styles
+│   │       ├── dashboard_layout.css  # User dashboard styles
+│   │       └── admin_layout.css # Admin dashboard styles
 │   ├── js/                      # JavaScript files
 │   ├── images/                  # Static images
-│   ├── uploads/                 # User uploads (menu images)
+│   ├── uploads/                 # User uploads (menu images, profiles)
 │   └── fontawesome/             # Font Awesome icons
 │
-├── 📁 data/                     # JSON database files
+├── 📁 data/                     # JSON database files (auto-created)
 │   ├── cafe_users.json          # User accounts
 │   ├── cafe_admins.json         # Admin accounts
 │   ├── menu_items.json          # Menu items
 │   ├── cafe_cart.json           # Shopping cart
 │   ├── cafe_orders.json         # Orders
 │   ├── cafe_order_items.json    # Order items
-│   └── cafe_messages.json       # Contact messages
+│   ├── cafe_offers.json         # Promotional offers
+│   ├── user_addresses.json      # User addresses
+│   └── contact_messages.json    # Contact messages
 │
-└── 📁 api/                      # API endpoints (if any)
+└── 📄 ORDER_SYSTEM.md           # Detailed order workflow documentation
 ```
 
 ---
@@ -171,7 +191,11 @@ cloud_9_cafe_rebuild/
    cd cloud_9_cafe_rebuild
    ```
 
-2. **Configure environment variables**
+2. **No database setup required!**
+   - JSON database files are auto-created in `/data/` folder
+   - No MySQL, no SQL imports needed
+
+3. **Configure environment variables** (optional)
    ```bash
    copy .env.example .env
    ```
@@ -180,18 +204,18 @@ cloud_9_cafe_rebuild/
    APP_NAME="Cloud 9 Cafe"
    APP_URL=http://localhost/cloud_9_cafe_rebuild
    APP_TIMEZONE=Asia/Kolkata
-   
-   ADMIN_EMAIL=admin@cloud9cafe.com
-   ADMIN_PASSWORD=your_secure_password
    ```
 
-3. **Set up web server**
+4. **Set up web server**
    - Point your web server to the project root directory
    - Ensure PHP has write permissions for the `data/` folder
 
-4. **Default Admin Credentials**
-   - Email: `admin@cloud9cafe.com`
-   - Password: `admin123` (change immediately after first login)
+5. **Default Credentials** (auto-created on first run)
+
+   | Account Type | Email | Password | Role |
+   |--------------|-------|----------|------|
+   | **Admin** | `admin@cloud9cafe.com` | `admin123` | super_admin |
+   | **User** | `user@cloud9cafe.com` | `user123` | User |
 
 ---
 
@@ -200,15 +224,16 @@ cloud_9_cafe_rebuild/
 ### For Customers
 
 1. **Browse Menu**
-   - Visit the homepage to see featured items
-   - Navigate to menu sections to browse all items
+   - Visit the homepage to see featured items in "Popular Picks"
+   - Click "Add to Cart" on any item
+   - If not logged in, you'll be redirected to login page
 
 2. **Create Account**
    - Click "Register" to create a new account
-   - Fill in your details and verify via OTP
+   - Or use the demo user: `user@cloud9cafe.com` / `user123`
 
 3. **Place Order**
-   - Add items to cart
+   - Add items to cart (AJAX - no page reload!)
    - Go to cart and click "Checkout"
    - Enter delivery address and payment method
    - Confirm order
@@ -225,7 +250,7 @@ cloud_9_cafe_rebuild/
 
 1. **Access Admin Panel**
    - Navigate to `/auth/login.php`
-   - Login with admin credentials
+   - Login with admin credentials: `admin@cloud9cafe.com` / `admin123`
 
 2. **Manage Menu**
    - Go to "Menu" section
@@ -261,14 +286,17 @@ cloud_9_cafe_rebuild/
 ```json
 {
   "id": 1,
-  "fullname": "John Doe",
-  "email": "john@example.com",
-  "password": "hashed_password",
-  "mobile": "9876543210",
-  "role": "customer",
+  "fullname": "Demo User",
+  "email": "user@cloud9cafe.com",
+  "password": "user123",
+  "mobile": "9876543211",
+  "address": "123 Coffee Street",
+  "role": "User",
   "status": "Active",
   "reward_points": 50,
-  "created_at": "2024-01-01 10:00:00"
+  "profile_picture": "",
+  "created_at": "2024-01-01 10:00:00",
+  "updated_at": "2024-01-01 10:00:00"
 }
 ```
 
@@ -281,7 +309,9 @@ cloud_9_cafe_rebuild/
   "password": "admin123",
   "mobile": "9876543210",
   "role": "super_admin",
-  "status": "Active"
+  "status": "Active",
+  "created_at": "2024-01-01 10:00:00",
+  "updated_at": "2024-01-01 10:00:00"
 }
 ```
 
@@ -289,13 +319,16 @@ cloud_9_cafe_rebuild/
 ```json
 {
   "id": 1,
-  "name": "Margherita Pizza",
-  "description": "Classic cheese pizza",
-  "price": 299.00,
-  "category": "Pizza",
-  "image": "pizza.jpg",
-  "stock_quantity": 50,
-  "status": "Available"
+  "name": "Caramel Macchiato",
+  "description": "Rich espresso with caramel",
+  "price": 450,
+  "category": "Coffee",
+  "image": "images/menu/coffee.jpg",
+  "stock_quantity": 100,
+  "availability": "Available",
+  "featured": 1,
+  "created_at": "2024-01-01 10:00:00",
+  "updated_at": "2024-01-01 10:00:00"
 }
 ```
 
@@ -306,8 +339,9 @@ cloud_9_cafe_rebuild/
   "user_id": 1,
   "menu_item_id": 1,
   "quantity": 2,
-  "customization": "Extra cheese",
-  "added_at": "2024-01-01 12:00:00"
+  "customization": "Extra shot",
+  "created_at": "2024-01-01 12:00:00",
+  "updated_at": "2024-01-01 12:00:00"
 }
 ```
 
@@ -317,13 +351,15 @@ cloud_9_cafe_rebuild/
   "id": 1,
   "order_number": "ORD-20240101-1234",
   "user_id": 1,
-  "total_amount": 598.00,
+  "total_amount": 900.00,
   "order_note": "Deliver by 7 PM",
   "status": "Pending",
   "payment_status": "Pending",
   "payment_method": "Cash",
-  "delivery_address": "123 Main St",
-  "order_date": "2024-01-01 12:30:00"
+  "delivery_address": "123 Coffee Street",
+  "order_date": "2024-01-01 12:30:00",
+  "created_at": "2024-01-01 12:30:00",
+  "updated_at": "2024-01-01 12:30:00"
 }
 ```
 
@@ -334,9 +370,24 @@ cloud_9_cafe_rebuild/
   "order_id": 1,
   "menu_item_id": 1,
   "quantity": 2,
-  "unit_price": 299.00,
-  "subtotal": 598.00,
-  "customization": "Extra cheese"
+  "unit_price": 450.00,
+  "subtotal": 900.00,
+  "customization": "Extra shot",
+  "created_at": "2024-01-01 12:30:00"
+}
+```
+
+#### `cafe_offers` - Promotional Offers
+```json
+{
+  "id": 1,
+  "title": "Summer Special",
+  "description": "20% off all cold drinks",
+  "discount_percentage": 20,
+  "start_date": "2024-06-01",
+  "end_date": "2024-08-31",
+  "status": "Active",
+  "created_at": "2024-01-01 10:00:00"
 }
 ```
 
@@ -344,12 +395,12 @@ cloud_9_cafe_rebuild/
 
 ## 🔒 Security Features
 
-- **Session-based Authentication** - Secure cookie-based login system
-- **Input Sanitization** - All user inputs are sanitized using `sanitize()` function
-- **CSRF Protection** - Token-based CSRF protection
-- **Password Security** - Secure password hashing
+- **Cookie-based Authentication** - Secure signed cookies with HMAC-SHA256 (no PHP sessions)
+- **Token Signing** - All auth tokens are cryptographically signed
+- **HTTP-Only Cookies** - Prevents XSS attacks
+- **SameSite Cookies** - CSRF protection
+- **Input Sanitization** - All user inputs sanitized
 - **Role Verification** - Admin and user role checks on all protected pages
-- **SQL Injection Prevention** - Using prepared statements (in MySQL mode) or JSON validation
 - **File Upload Validation** - Image type and size validation for uploads
 - **XSS Protection** - Output encoding with `htmlspecialchars()`
 
@@ -359,7 +410,7 @@ cloud_9_cafe_rebuild/
 
 ### Backend
 - **PHP 8.0+** - Server-side scripting
-- **JsonDB** - Custom JSON-based database class
+- **JsonDB** - Custom JSON-based database class (no MySQL!)
 - **TokenAuth** - Custom cookie-based authentication
 
 ### Frontend
@@ -370,7 +421,7 @@ cloud_9_cafe_rebuild/
 - **Font Awesome** - Icons
 
 ### Data Storage
-- **JSON Files** - Lightweight data storage (cafe_users.json, menu_items.json, etc.)
+- **JSON Files** - Lightweight data storage in `/data/` folder
 
 ---
 

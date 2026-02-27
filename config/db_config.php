@@ -121,4 +121,32 @@ if ($db->count('cafe_admins') === 0) {
 // =============================================================================
 // END SECTION: Default Admin Initialization
 // =============================================================================
+
+// =============================================================================
+// SECTION: Default User Initialization
+// DESCRIPTION: Create default user account if no users exist in database
+// =============================================================================
+
+// Check if any users exist
+// FUNCTION: $db->count() - Returns number of records in table
+if ($db->count('cafe_users') === 0) {
+    
+    // No users found - insert default demo user
+    // FUNCTION: $db->insert() - Creates new record in table
+    $db->insert('cafe_users', [
+        'fullname' => 'Demo User',                 // User display name
+        'email' => 'user@cloud9cafe.com',          // User login email
+        'password' => 'user123',                   // User password (plain text for demo)
+        'mobile' => '9876543211',                  // Contact number
+        'address' => '123 Coffee Street, Cafe City', // Default delivery address
+        'role' => 'User',                          // User role
+        'status' => 'Active',                      // Account status
+        'reward_points' => 50,                     // Starting reward points
+        'profile_picture' => ''                    // No profile picture yet
+    ]);
+    // Note: Default user credentials - Email: user@cloud9cafe.com, Password: user123
+}
+// =============================================================================
+// END SECTION: Default User Initialization
+// =============================================================================
 ?>
