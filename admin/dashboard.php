@@ -1,53 +1,46 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
-// Check if admin is logged in using cafe_admin_id
-if (!isset($_SESSION['cafe_admin_id'])) {
+// Check if admin is logged in
+if (!$auth->isAdminLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
-
-$admin_name = $_SESSION['cafe_admin_name'] ?? 'Admin';
+$admin_id = $auth->getAdminId();
+$admin_name = $auth->getUserName() ?? 'Admin';
+$admin_role = $auth->getAdminRole();
 
 // Get dashboard stats
 $stats = [];
 
-// Total cafe_users
-$users_result = mysqli_query($con, "SELECT COUNT(*) as count FROM cafe_users");
-$stats['total_users'] = mysqli_fetch_assoc($users_result)['count'];
+// Total users
+$users = $db->select('cafe_users');
+$stats['total_users'] = count($users);
 
-// Total cafe_orders
-$orders_result = mysqli_query($con, "SELECT COUNT(*) as count FROM cafe_orders");
-$stats['total_orders'] = mysqli_fetch_assoc($orders_result)['count'];
+// Total orders
+$orders = $db->select('cafe_orders');
+$stats['total_orders'] = count($orders);
 
-// Total revenue from cafe_orders
-$revenue_result = mysqli_query($con, "SELECT SUM(total_amount) as total FROM cafe_orders WHERE payment_status = 'Paid'");
-$revenue = mysqli_fetch_assoc($revenue_result)['total'];
-$stats['total_revenue'] = $revenue ? $revenue : 0;
+// Total revenue
+$paidOrders = $db->select('cafe_orders', ['payment_status' => 'Paid']);
+$stats['total_revenue'] = 0;
+foreach ($paidOrders as $order) {
+    $stats['total_revenue'] += $order['total_amount'];
+}
 
-// Total menu_items
-$menu_result = mysqli_query($con, "SELECT COUNT(*) as count FROM menu_items");
-$stats['total_menu_items'] = mysqli_fetch_assoc($menu_result)['count'];
+// Total menu items
+$menuItems = $db->select('menu_items');
+$stats['total_menu_items'] = count($menuItems);
 
 // Pending orders
-$pending_orders = mysqli_query($con, "SELECT COUNT(*) as count FROM cafe_orders WHERE status = 'Pending'");
-$stats['pending_count'] = mysqli_fetch_assoc($pending_orders)['count'];
+$pendingOrders = $db->select('cafe_orders', ['status' => 'Pending']);
+$stats['pending_count'] = count($pendingOrders);
 
 // Recent orders
-$recent_orders = mysqli_query($con, "SELECT o.*, u.fullname as user_name 
-                                     FROM cafe_orders o
-                                     JOIN cafe_users u ON o.user_id = u.id
-                                     ORDER BY o.order_date DESC
-                                     LIMIT 5");
+$recentOrders = $db->select('cafe_orders', [], ['order_date' => 'DESC'], 5);
 
 // Recent users
-$recent_users = mysqli_query($con, "SELECT id, fullname, email, created_at 
-                                    FROM cafe_users 
-                                    ORDER BY created_at DESC 
-                                    LIMIT 5");
+$recentUsers = $db->select('cafe_users', [], ['created_at' => 'DESC'], 5);
 
 $title = "Admin Dashboard - Cloud 9 Cafe";
 $page_title = "Dashboard";
@@ -114,7 +107,7 @@ ob_start();
                 <a href="orders.php" class="btn btn-sm btn-outline-primary rounded-pill">View All</a>
             </div>
             <div class="card-body p-0">
-                <?php if (mysqli_num_rows($recent_orders) === 0): ?>
+                <?php if (empty($recentOrders)): ?>
                 <div class="text-center py-5">
                     <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
                     <p class="text-muted">No orders yet</p>
@@ -132,10 +125,12 @@ ob_start();
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while ($order = mysqli_fetch_assoc($recent_orders)): ?>
+                            <?php foreach ($recentOrders as $order): 
+                                $user = $db->selectOne('cafe_users', ['id' => $order['user_id']]);
+                            ?>
                             <tr>
                                 <td class="ps-4 fw-medium"><?php echo htmlspecialchars($order['order_number']); ?></td>
-                                <td><?php echo htmlspecialchars($order['user_name']); ?></td>
+                                <td><?php echo htmlspecialchars($user['fullname'] ?? 'Unknown'); ?></td>
                                 <td><small class="text-muted"><?php echo date('M d, Y', strtotime($order['order_date'])); ?></small></td>
                                 <td>
                                     <span class="status-badge status-<?php echo strtolower($order['status']); ?>">
@@ -144,7 +139,7 @@ ob_start();
                                 </td>
                                 <td class="text-end pe-4 fw-bold">₹<?php echo number_format($order['total_amount'], 2); ?></td>
                             </tr>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
@@ -179,13 +174,13 @@ ob_start();
                 <h5><i class="fas fa-user-plus me-2 text-success"></i>Recent Users</h5>
             </div>
             <div class="card-body p-0">
-                <?php if (mysqli_num_rows($recent_users) === 0): ?>
+                <?php if (empty($recentUsers)): ?>
                 <div class="text-center py-4">
                     <p class="text-muted mb-0">No users yet</p>
                 </div>
                 <?php else: ?>
                 <div class="list-group list-group-flush">
-                    <?php while ($user = mysqli_fetch_assoc($recent_users)): ?>
+                    <?php foreach ($recentUsers as $user): ?>
                     <div class="list-group-item border-0 px-4 py-3 d-flex align-items-center">
                         <div class="flex-shrink-0">
                             <div class="bg-light rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
@@ -198,7 +193,7 @@ ob_start();
                         </div>
                         <small class="text-muted"><?php echo date('M d', strtotime($user['created_at'])); ?></small>
                     </div>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
             </div>

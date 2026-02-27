@@ -1,19 +1,23 @@
 <?php
 require_once '../config/db_config.php';
 
-// Process form submission - KEEP EXISTING LOGIC
+// Process form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = mysqli_real_escape_string($con, $_POST['fname']);
-    $email = mysqli_real_escape_string($con, $_POST['email']);
-    $subject = mysqli_real_escape_string($con, $_POST['subject']);
-    $message = mysqli_real_escape_string($con, $_POST['message']);
+    $name = $_POST['fname'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $subject = $_POST['subject'] ?? '';
+    $message = $_POST['message'] ?? '';
     
-    $query = "INSERT INTO contact_messages (name, email, subject, message) VALUES ('$name', '$email', '$subject', '$message')";
-    if (mysqli_query($con, $query)) {
-        $success = "Thank you for your message! We'll get back to you soon.";
-    } else {
-        $error = "Sorry, there was an error sending your message. Please try again.";
-    }
+    $messageData = [
+        'name' => $name,
+        'email' => $email,
+        'subject' => $subject,
+        'message' => $message,
+        'status' => 'New'
+    ];
+    
+    $db->insert('contact_messages', $messageData);
+    $success = "Thank you for your message! We'll get back to you soon.";
 }
 
 $title = "Contact Us - Cloud 9 Cafe";
@@ -58,16 +62,19 @@ ob_start();
                         </div>
                         <?php endif; ?>
                         
-                        <form action="" method="POST">
+                        <form action="" method="POST" id="contactForm">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label for="name" class="form-label fw-medium">Your Name</label>
+                                    <label for="fname" class="form-label fw-medium">Your Name</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-light border-end-0">
                                             <i class="fas fa-user text-muted"></i>
                                         </span>
-                                        <input type="text" class="form-control border-start-0 ps-0" id="name" name="fname" placeholder="John Doe" required>
+                                        <input type="text" class="form-control border-start-0 ps-0" id="fname" name="fname" 
+                                               placeholder="John Doe" 
+                                               data-validation="required,alphabetic,min" data-min="2">
                                     </div>
+                                    <div id="fname_error" class="invalid-feedback d-block"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="email" class="form-label fw-medium">Email Address</label>
@@ -75,8 +82,11 @@ ob_start();
                                         <span class="input-group-text bg-light border-end-0">
                                             <i class="fas fa-envelope text-muted"></i>
                                         </span>
-                                        <input type="email" class="form-control border-start-0 ps-0" id="email" name="email" placeholder="john@example.com" required>
+                                        <input type="email" class="form-control border-start-0 ps-0" id="email" name="email" 
+                                               placeholder="john@example.com" 
+                                               data-validation="required,email">
                                     </div>
+                                    <div id="email_error" class="invalid-feedback d-block"></div>
                                 </div>
                             </div>
                             
@@ -86,13 +96,19 @@ ob_start();
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="fas fa-tag text-muted"></i>
                                     </span>
-                                    <input type="text" class="form-control border-start-0 ps-0" id="subject" name="subject" placeholder="How can we help?" required>
+                                    <input type="text" class="form-control border-start-0 ps-0" id="subject" name="subject" 
+                                           placeholder="How can we help?" 
+                                           data-validation="required,min" data-min="3">
                                 </div>
+                                <div id="subject_error" class="invalid-feedback d-block"></div>
                             </div>
                             
                             <div class="mt-3">
                                 <label for="message" class="form-label fw-medium">Message</label>
-                                <textarea class="form-control" id="message" name="message" rows="5" placeholder="Tell us more about your inquiry..." required></textarea>
+                                <textarea class="form-control" id="message" name="message" rows="5" 
+                                          placeholder="Tell us more about your inquiry..." 
+                                          data-validation="required,min" data-min="10"></textarea>
+                                <div id="message_error" class="invalid-feedback d-block"></div>
                             </div>
                             
                             <button type="submit" class="btn btn-primary btn-lg w-100 mt-4">
@@ -184,6 +200,20 @@ ob_start();
         </div>
     </div>
 </section>
+
+<style>
+    /* Validation styles */
+    .is-valid {
+        border-color: #198754 !important;
+    }
+    
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+</style>
+
+<script src="../assets/js/jquery.js"></script>
+<script src="../assets/js/validate.js"></script>
 
 <?php
 $content = ob_get_clean();

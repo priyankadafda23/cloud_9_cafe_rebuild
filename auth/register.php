@@ -1,11 +1,8 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 include_once '../config/db_config.php';
 $title = "Register - Cloud 9 Cafe";
 
-// Registration processing - KEEP EXISTING LOGIC
+// Registration processing
 if (isset($_POST['reg_btn'])) {
     $fname = $_POST['firstName'];
     $lname = $_POST['lastName'];
@@ -17,20 +14,51 @@ if (isset($_POST['reg_btn'])) {
     $tmp_name = $_FILES['profile_picture']['tmp_name'];
     $upload_dir = "uploads/";
     $address = "Rajkot";
+    
     if (!is_dir($upload_dir)) {
-        mkdir($upload_dir);
+        mkdir($upload_dir, 0755, true);
     }
+    
     $fullname = $fname . " " . $lname;
     $token = uniqid();
-    $insert_query = "INSERT INTO `cafe_users`(`fullname`, `email`, `password`, `gender`, `mobile`, `profile_picture`, `address`,`token`) values ('$fullname','$email','$password','$gender',$phone,'$profile_picture','$address','$token')";
-
-    if (mysqli_query($con, $insert_query)) {
-        move_uploaded_file($tmp_name, $upload_dir . $profile_picture);
-        $_SESSION['cafe_user_id'] = mysqli_insert_id($con);
-        $_SESSION['cafe_user_name'] = $fullname;
-        echo "<script>alert('Registration successful'); window.location.href='../user/dashboard.php';</script>";
+    
+    // Check if email already exists
+    $existingUser = $db->selectOne('cafe_users', ['email' => $email]);
+    if ($existingUser) {
+        $register_error = "Email already registered. Please use a different email.";
     } else {
-        echo "<script>alert('Error in registration');</script>";
+        // Handle profile picture upload
+        $profile_pic_path = null;
+        if (!empty($profile_picture)) {
+            $profile_pic_path = $upload_dir . time() . '_' . $profile_picture;
+            move_uploaded_file($tmp_name, $profile_pic_path);
+        }
+        
+        // Insert user into JSON database
+        $userData = [
+            'fullname' => $fullname,
+            'email' => $email,
+            'password' => $password,
+            'gender' => $gender,
+            'mobile' => $phone,
+            'profile_picture' => $profile_pic_path,
+            'address' => $address,
+            'reward_points' => 0,
+            'status' => 'Active',
+            'role' => 'User',
+            'token' => $token
+        ];
+        
+        $newUserId = $db->insert('cafe_users', $userData);
+        
+        if ($newUserId) {
+            // Set cookie for automatic login after registration
+            $auth->loginUser($newUserId, $fullname, 'User');
+            header("Location: ../user/dashboard.php");
+            exit();
+        } else {
+            $register_error = "Error in registration";
+        }
     }
 }
 
@@ -54,6 +82,14 @@ ob_start();
                         <p class="text-muted mb-0">Join Cloud 9 Cafe and start your coffee journey</p>
                     </div>
 
+                    <!-- Error Message -->
+                    <?php if (isset($register_error)): ?>
+                    <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        <?php echo $register_error; ?>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Registration Form -->
                     <form action="register.php" method="post" id="regform" enctype="multipart/form-data">
                         <div class="row g-3">
@@ -64,8 +100,11 @@ ob_start();
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="fas fa-user text-muted"></i>
                                     </span>
-                                    <input type="text" class="form-control border-start-0 ps-0" id="firstName" name="firstName" placeholder="John" required>
+                                    <input type="text" class="form-control border-start-0 ps-0" id="firstName" name="firstName" 
+                                           placeholder="John" 
+                                           data-validation="required,alphabetic,min" data-min="2">
                                 </div>
+                                <div id="firstName_error" class="invalid-feedback d-block"></div>
                             </div>
 
                             <!-- Last Name -->
@@ -75,8 +114,11 @@ ob_start();
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="fas fa-user text-muted"></i>
                                     </span>
-                                    <input type="text" class="form-control border-start-0 ps-0" id="lastName" name="lastName" placeholder="Doe" required>
+                                    <input type="text" class="form-control border-start-0 ps-0" id="lastName" name="lastName" 
+                                           placeholder="Doe" 
+                                           data-validation="required,alphabetic,min" data-min="2">
                                 </div>
+                                <div id="lastName_error" class="invalid-feedback d-block"></div>
                             </div>
 
                             <!-- Email -->
@@ -86,8 +128,11 @@ ob_start();
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="fas fa-envelope text-muted"></i>
                                     </span>
-                                    <input type="email" class="form-control border-start-0 ps-0" id="email" name="email" placeholder="john@example.com" required>
+                                    <input type="email" class="form-control border-start-0 ps-0" id="email" name="email" 
+                                           placeholder="john@example.com" 
+                                           data-validation="required,email">
                                 </div>
+                                <div id="email_error" class="invalid-feedback d-block"></div>
                             </div>
 
                             <!-- Phone -->
@@ -97,8 +142,11 @@ ob_start();
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="fas fa-phone text-muted"></i>
                                     </span>
-                                    <input type="tel" class="form-control border-start-0 ps-0" id="phone" name="phone" placeholder="1234567890" required>
+                                    <input type="tel" class="form-control border-start-0 ps-0" id="phone" name="phone" 
+                                           placeholder="1234567890" 
+                                           data-validation="required,number,min" data-min="10" data-max="15">
                                 </div>
+                                <div id="phone_error" class="invalid-feedback d-block"></div>
                             </div>
 
                             <!-- Gender -->
@@ -108,13 +156,15 @@ ob_start();
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="fas fa-venus-mars text-muted"></i>
                                     </span>
-                                    <select class="form-select border-start-0 ps-0" id="gender" name="gender" required>
+                                    <select class="form-select border-start-0 ps-0" id="gender" name="gender" 
+                                            data-validation="required,select">
                                         <option value="">Select Gender</option>
                                         <option value="male">Male</option>
                                         <option value="female">Female</option>
                                         <option value="other">Other</option>
                                     </select>
                                 </div>
+                                <div id="gender_error" class="invalid-feedback d-block"></div>
                             </div>
 
                             <!-- Profile Picture -->
@@ -124,8 +174,12 @@ ob_start();
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="fas fa-camera text-muted"></i>
                                     </span>
-                                    <input type="file" class="form-control border-start-0 ps-0" id="profile_picture" name="profile_picture" accept="image/*">
+                                    <input type="file" class="form-control border-start-0 ps-0" id="profile_picture" name="profile_picture" 
+                                           accept="image/*"
+                                           data-validation="fileType,fileSize" data-filetype="jpg,jpeg,png,gif" data-filesize="2048">
                                 </div>
+                                <div id="profile_picture_error" class="invalid-feedback d-block"></div>
+                                <small class="text-muted">Max 2MB (JPG, PNG, GIF)</small>
                             </div>
 
                             <!-- Password -->
@@ -135,11 +189,14 @@ ob_start();
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="fas fa-lock text-muted"></i>
                                     </span>
-                                    <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" placeholder="Create password" required>
+                                    <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" 
+                                           placeholder="Create password" 
+                                           data-validation="required,strongPassword">
                                     <button type="button" class="btn btn-outline-secondary border-start-0 toggle-password" data-target="#password">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
+                                <div id="password_error" class="invalid-feedback d-block"></div>
                             </div>
 
                             <!-- Confirm Password -->
@@ -149,18 +206,23 @@ ob_start();
                                     <span class="input-group-text bg-light border-end-0">
                                         <i class="fas fa-lock text-muted"></i>
                                     </span>
-                                    <input type="password" class="form-control border-start-0 ps-0" id="confirmPassword" name="confirmPassword" placeholder="Confirm password" required>
+                                    <input type="password" class="form-control border-start-0 ps-0" id="confirmPassword" name="confirmPassword" 
+                                           placeholder="Confirm password" 
+                                           data-validation="required,confirmPassword">
                                 </div>
+                                <div id="confirmPassword_error" class="invalid-feedback d-block"></div>
                             </div>
                         </div>
 
                         <!-- Terms -->
                         <div class="mt-4">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+                                <input class="form-check-input" type="checkbox" id="terms" name="terms" 
+                                       data-validation="required">
                                 <label class="form-check-label text-muted small" for="terms">
                                     I agree to the <a href="terms_of_service.php" class="text-primary">Terms of Service</a> and <a href="privacy_policy.php" class="text-primary">Privacy Policy</a>
                                 </label>
+                                <div id="terms_error" class="invalid-feedback d-block"></div>
                             </div>
                         </div>
 
@@ -215,8 +277,19 @@ ob_start();
         background-color: var(--cafe-primary);
         border-color: var(--cafe-primary);
     }
+    
+    /* Validation styles */
+    .is-valid {
+        border-color: #198754 !important;
+    }
+    
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
 </style>
 
+<script src="../assets/js/jquery.js"></script>
+<script src="../assets/js/validate.js"></script>
 <script>
     // Toggle password visibility
     document.querySelectorAll('.toggle-password').forEach(btn => {
@@ -234,17 +307,6 @@ ob_start();
                 icon.classList.add('fa-eye');
             }
         });
-    });
-
-    // Password match validation
-    document.getElementById('regform').addEventListener('submit', function(e) {
-        const password = document.getElementById('password').value;
-        const confirm = document.getElementById('confirmPassword').value;
-        
-        if (password !== confirm) {
-            e.preventDefault();
-            alert('Passwords do not match!');
-        }
     });
 </script>
 

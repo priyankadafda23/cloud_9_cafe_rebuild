@@ -1,44 +1,45 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
-if (!isset($_SESSION['cafe_admin_id'])) {
+if (!$auth->isAdminLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
-
-$admin_id = $_SESSION['cafe_admin_id'];
+$admin_id = $auth->getAdminId();
+$admin_name = $auth->getUserName() ?? 'Admin';
+$admin_role = $auth->getAdminRole();
 $success = '';
 $error = '';
 
 // Get admin info
-$admin_result = mysqli_query($con, "SELECT * FROM cafe_admins WHERE id = $admin_id");
-$admin = mysqli_fetch_assoc($admin_result);
+$admin = $db->selectOne('cafe_admins', ['id' => $admin_id]);
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $fullname = mysqli_real_escape_string($con, $_POST['fullname']);
-    $email = mysqli_real_escape_string($con, $_POST['email']);
-    $mobile = mysqli_real_escape_string($con, $_POST['mobile']);
+    $fullname = $_POST['fullname'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $mobile = $_POST['mobile'] ?? '';
     
     // Update profile
-    mysqli_query($con, "UPDATE cafe_admins SET fullname = '$fullname', email = '$email', mobile = '$mobile' WHERE id = $admin_id");
+    $updateData = [
+        'fullname' => $fullname,
+        'email' => $email,
+        'mobile' => $mobile
+    ];
     
     // Update password if provided
     if (!empty($_POST['new_password'])) {
-        $new_password = mysqli_real_escape_string($con, $_POST['new_password']);
-        mysqli_query($con, "UPDATE cafe_admins SET password = '$new_password' WHERE id = $admin_id");
+        $updateData['password'] = $_POST['new_password'];
     }
     
-    $_SESSION['cafe_admin_name'] = $fullname;
+    $db->update('cafe_admins', $updateData, ['id' => $admin_id]);
+    
+    // Session name will be updated by auth class on next request
     $success = 'Profile updated successfully!';
     
     // Refresh admin data
-    $admin_result = mysqli_query($con, "SELECT * FROM cafe_admins WHERE id = $admin_id");
-    $admin = mysqli_fetch_assoc($admin_result);
+    $admin = $db->selectOne('cafe_admins', ['id' => $admin_id]);
 }
 
 $title = "My Profile - Cloud 9 Cafe";

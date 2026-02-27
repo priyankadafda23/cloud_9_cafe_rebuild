@@ -1,14 +1,14 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
-if (!isset($_SESSION['cafe_admin_id'])) {
+if (!$auth->isAdminLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
+$admin_id = $auth->getAdminId();
+$admin_name = $auth->getUserName() ?? 'Admin';
+$admin_role = $auth->getAdminRole();
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     header("Location: orders.php");
@@ -18,21 +18,17 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $order_id = intval($_GET['id']);
 
 // Get order details
-$order_result = mysqli_query($con, "SELECT o.*, u.fullname as user_name, u.email as user_email, u.mobile as user_mobile, u.address as user_address 
-                                    FROM cafe_orders o 
-                                    JOIN cafe_users u ON o.user_id = u.id 
-                                    WHERE o.id = $order_id");
-if (mysqli_num_rows($order_result) == 0) {
+$order = $db->selectOne('cafe_orders', ['id' => $order_id]);
+if (!$order) {
     header("Location: orders.php");
     exit();
 }
-$order = mysqli_fetch_assoc($order_result);
+
+// Get user details
+$user = $db->selectOne('cafe_users', ['id' => $order['user_id']]);
 
 // Get order items
-$items_result = mysqli_query($con, "SELECT oi.*, m.name as item_name, m.image as item_image 
-                                    FROM cafe_order_items oi 
-                                    JOIN menu_items m ON oi.menu_item_id = m.id 
-                                    WHERE oi.order_id = $order_id");
+$orderItems = $db->select('cafe_order_items', ['order_id' => $order_id]);
 
 $title = "Order #" . $order['order_number'] . " - Cloud 9 Cafe";
 $active_sidebar = 'orders';
@@ -157,13 +153,15 @@ ob_start();
                             </tr>
                         </thead>
                         <tbody>
-                            <?php while ($item = mysqli_fetch_assoc($items_result)): ?>
+                            <?php foreach ($orderItems as $item): 
+                                $menuItem = $db->selectOne('menu_items', ['id' => $item['menu_item_id']]);
+                            ?>
                             <tr>
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
                                         <div class="flex-shrink-0">
-                                            <?php if ($item['item_image']): ?>
-                                            <img src="../assets/images/<?php echo $item['item_image']; ?>" alt="" class="item-image">
+                                            <?php if ($menuItem && $menuItem['image']): ?>
+                                            <img src="../<?php echo $menuItem['image']; ?>" alt="" class="item-image">
                                             <?php else: ?>
                                             <div class="bg-light d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; border-radius: 10px;">
                                                 <i class="fas fa-image text-muted"></i>
@@ -171,7 +169,7 @@ ob_start();
                                             <?php endif; ?>
                                         </div>
                                         <div class="flex-grow-1 ms-3">
-                                            <h6 class="mb-0 fw-bold"><?php echo htmlspecialchars($item['item_name']); ?></h6>
+                                            <h6 class="mb-0 fw-bold"><?php echo htmlspecialchars($menuItem['name'] ?? 'Unknown Item'); ?></h6>
                                             <?php if ($item['customization']): ?>
                                             <small class="text-muted"><?php echo htmlspecialchars($item['customization']); ?></small>
                                             <?php endif; ?>
@@ -182,7 +180,7 @@ ob_start();
                                 <td class="text-end">₹<?php echo number_format($item['unit_price'], 2); ?></td>
                                 <td class="text-end pe-4 fw-bold">₹<?php echo number_format($item['subtotal'], 2); ?></td>
                             </tr>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                         </tbody>
                         <tfoot class="table-light">
                             <tr>
@@ -217,16 +215,16 @@ ob_start();
             <div class="card-body p-4">
                 <div class="mb-3">
                     <small class="text-muted d-block">Name</small>
-                    <span class="fw-medium"><?php echo htmlspecialchars($order['user_name']); ?></span>
+                    <span class="fw-medium"><?php echo htmlspecialchars($user['fullname'] ?? 'Unknown'); ?></span>
                 </div>
                 <div class="mb-3">
                     <small class="text-muted d-block">Email</small>
-                    <span class="fw-medium"><?php echo htmlspecialchars($order['user_email']); ?></span>
+                    <span class="fw-medium"><?php echo htmlspecialchars($user['email'] ?? ''); ?></span>
                 </div>
-                <?php if ($order['user_mobile']): ?>
+                <?php if ($user && $user['mobile']): ?>
                 <div class="mb-3">
                     <small class="text-muted d-block">Phone</small>
-                    <span class="fw-medium"><?php echo htmlspecialchars($order['user_mobile']); ?></span>
+                    <span class="fw-medium"><?php echo htmlspecialchars($user['mobile']); ?></span>
                 </div>
                 <?php endif; ?>
             </div>

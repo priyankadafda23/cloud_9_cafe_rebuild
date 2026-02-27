@@ -1,22 +1,18 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if user is logged in
-if (!isset($_SESSION['cafe_user_id'])) {
+if (!$auth->isUserLoggedIn()) {
     header("Location: login.php");
     exit();
 }
 
-$user_id = $_SESSION['cafe_user_id'];
+$user_id = $auth->getUserId();
 $success = '';
 $error = '';
 
 // Get user data
-$user_query = mysqli_query($con, "SELECT * FROM cafe_users WHERE id = $user_id");
-$user = mysqli_fetch_assoc($user_query);
+$user = $db->selectOne('cafe_users', ['id' => $user_id]);
 
 // Helper function to create safe folder name
 function createSafeFolderName($name) {
@@ -28,19 +24,19 @@ function createSafeFolderName($name) {
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $fullname = mysqli_real_escape_string($con, $_POST['fullname']);
-    $email = mysqli_real_escape_string($con, $_POST['email']);
-    $mobile = mysqli_real_escape_string($con, $_POST['mobile']);
-    $gender = mysqli_real_escape_string($con, $_POST['gender']);
-    $address = mysqli_real_escape_string($con, $_POST['address']);
+    $fullname = $_POST['fullname'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $mobile = $_POST['mobile'] ?? '';
+    $gender = $_POST['gender'] ?? '';
+    $address = $_POST['address'] ?? '';
     
     // Check if email already exists for another user
-    $email_check = mysqli_query($con, "SELECT id FROM cafe_users WHERE email = '$email' AND id != $user_id");
-    if (mysqli_num_rows($email_check) > 0) {
+    $existingUser = $db->selectOne('cafe_users', ['email' => $email]);
+    if ($existingUser && $existingUser['id'] != $user_id) {
         $error = 'Email already exists!';
     } else {
         // Handle profile picture upload
-        $profile_picture = $user['profile_picture'];
+        $profile_picture = $user['profile_picture'] ?? null;
         if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
             // Create user-specific folder: assets/uploads/Profile/{client_name}_{user_id}/
             $safe_name = createSafeFolderName($fullname);
@@ -59,8 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $allowed = ['jpg', 'jpeg', 'png', 'gif'];
             if (in_array($extension, $allowed)) {
                 // Delete old profile picture if exists
-                if ($user['profile_picture'] && file_exists('../' . $user['profile_picture'])) {
-                    unlink('../' . $user['profile_picture']);
+                if ($profile_picture && file_exists('../' . $profile_picture)) {
+                    unlink('../' . $profile_picture);
                 }
                 
                 // Save with standardized name: profile_picture.{extension}
@@ -75,21 +71,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
         
-        $update_query = "UPDATE cafe_users SET 
-                        fullname = '$fullname', 
-                        email = '$email', 
-                        mobile = '$mobile', 
-                        gender = '$gender',
-                        address = '$address',
-                        profile_picture = '$profile_picture'
-                        WHERE id = $user_id";
+        $updateData = [
+            'fullname' => $fullname,
+            'email' => $email,
+            'mobile' => $mobile,
+            'gender' => $gender,
+            'address' => $address,
+            'profile_picture' => $profile_picture
+        ];
         
-        if (mysqli_query($con, $update_query)) {
-            $_SESSION['cafe_user_name'] = $fullname;
+        $updated = $db->update('cafe_users', $updateData, ['id' => $user_id]);
+        
+        if ($updated) {
             $success = 'Profile updated successfully!';
             // Refresh user data
-            $user_query = mysqli_query($con, "SELECT * FROM cafe_users WHERE id = $user_id");
-            $user = mysqli_fetch_assoc($user_query);
+            $user = $db->selectOne('cafe_users', ['id' => $user_id]);
         } else {
             $error = 'Failed to update profile. Please try again.';
         }

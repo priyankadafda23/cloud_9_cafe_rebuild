@@ -1,0 +1,18 @@
+Cloud9 Café
+1. login/register/contact form using validate.js from git
+- keep role of user,admin
+2. include layout.php for header and footer as given in git repo use include_once
+3. a separate file of css folder according
+- one main css file of layout.php 
+- write comment on start of any page specific css
+ex. 
+<!--this css is for hovering effect on card-->
+css
+<!-- another css comment-->
+4. keep file structure simple. and use html, css,bootstrap only with no database, only form validations through js and php (basic)
+- KEEP BASIC JS AND PHP
+5. admin panel
+- just basic ui, no need of all being functional, just keep it BASIC
+6. guest view
+- add to cart feature gets you to login page
+

@@ -1,54 +1,124 @@
 <?php
 /**
- * Cloud 9 Cafe - Database Configuration
- * Uses .env file for environment variables
+ * =============================================================================
+ * CLOUD 9 CAFE - DATABASE CONFIGURATION
+ * =============================================================================
+ * 
+ * ROLE: This file initializes the database connection and authentication system.
+ *       It sets up the JSON-based database (JsonDB) and cookie-based 
+ *       authentication (TokenAuth) for use across the application.
+ * 
+ * USED BY: Almost all PHP files in the project via include/require
+ * 
+ * FLOW: 1. Requires JsonDB class file
+ *       2. Requires TokenAuth class file
+ *       3. Creates data directory if it doesn't exist
+ *       4. Initializes JsonDB instance
+ *       5. Initializes TokenAuth instance
+ *       6. Creates default admin if no admins exist
+ * 
+ * NOTE: Uses JSON files instead of MySQL for this demo project
  */
 
-// Load environment configuration
-require_once __DIR__ . '/Env.php';
+// =============================================================================
+// SECTION: Class File Includes
+// DESCRIPTION: Require the database and authentication class files
+// =============================================================================
 
-// Get database credentials from .env
-$db_host = Env::get('DB_HOST', 'localhost');
-$db_port = Env::get('DB_PORT', '3306');
-$db_name = Env::get('DB_DATABASE', 'PHP_Project_25_261');
-$db_user = Env::get('DB_USERNAME', 'root');
-$db_pass = Env::get('DB_PASSWORD', '');
-$db_charset = Env::get('DB_CHARSET', 'utf8mb4');
+// Require JsonDB class - Provides JSON file-based database operations
+// PATH: __DIR__ = current directory (config/), then go up to JsonDB.php
+require_once __DIR__ . '/JsonDB.php';
 
-// Create connection
-$con = mysqli_connect($db_host, $db_user, $db_pass, '', $db_port);
+// Require TokenAuth class - Provides cookie-based authentication
+require_once __DIR__ . '/TokenAuth.php';
+// =============================================================================
+// END SECTION: Class File Includes
+// =============================================================================
 
-if (!$con) {
-    die("Connection failed: " . mysqli_connect_error());
+// =============================================================================
+// SECTION: Data Directory Setup
+// DESCRIPTION: Create data directory for JSON files if it doesn't exist
+// =============================================================================
+
+// Define path to data directory (parent of config folder + /data/)
+$dataDir = __DIR__ . '/../data/';
+
+// Check if directory exists, create if not
+// FUNCTION: is_dir() - Checks if directory exists
+// FUNCTION: mkdir() - Creates directory with permissions
+if (!is_dir($dataDir)) {
+    // Create directory with 0755 permissions (rwxr-xr-x)
+    // true = recursive creation (creates parent dirs if needed)
+    mkdir($dataDir, 0755, true);
 }
+// =============================================================================
+// END SECTION: Data Directory Setup
+// =============================================================================
 
-// Select database
-if (!mysqli_select_db($con, $db_name)) {
-    die("Error selecting database: " . mysqli_error($con));
+// =============================================================================
+// SECTION: Database Instance Creation
+// DESCRIPTION: Create global JsonDB instance for database operations
+// =============================================================================
+
+// Create new JsonDB instance
+// PARAMETER: $dataDir = directory where JSON files will be stored
+// AVAILABLE TABLES (JSON files):
+//   - cafe_users.json      (customer accounts)
+//   - cafe_admins.json     (admin accounts)
+//   - cafe_cart.json       (shopping cart items)
+//   - cafe_orders.json     (orders)
+//   - cafe_order_items.json (order line items)
+//   - menu_items.json      (menu/catalog items)
+//   - cafe_messages.json   (contact form messages)
+$db = new JsonDB($dataDir);
+// =============================================================================
+// END SECTION: Database Instance Creation
+// =============================================================================
+
+// =============================================================================
+// SECTION: Authentication Instance Creation
+// DESCRIPTION: Create global TokenAuth instance for cookie-based auth
+// =============================================================================
+
+// Create new TokenAuth instance
+// This will be used to check login status, set cookies, and logout users
+// FUNCTIONALITY:
+//   - loginUser()    - Sets user auth cookie
+//   - loginAdmin()   - Sets admin auth cookie
+//   - logout()       - Clears auth cookie
+//   - isUserLoggedIn()  - Check if user is logged in
+//   - isAdminLoggedIn() - Check if admin is logged in
+//   - getUserId()    - Get logged-in user's ID
+//   - getAdminId()   - Get logged-in admin's ID
+$auth = new TokenAuth();
+// =============================================================================
+// END SECTION: Authentication Instance Creation
+// =============================================================================
+
+// =============================================================================
+// SECTION: Default Admin Initialization
+// DESCRIPTION: Create default admin account if no admins exist in database
+// =============================================================================
+
+// Check if any admins exist
+// FUNCTION: $db->count() - Returns number of records in table
+// PARAMETER: 'cafe_admins' = table name
+if ($db->count('cafe_admins') === 0) {
+    
+    // No admins found - insert default admin
+    // FUNCTION: $db->insert() - Creates new record in table
+    // PARAMETERS: table name, associative array of field => value
+    $db->insert('cafe_admins', [
+        'fullname' => 'Admin User',              // Admin display name
+        'email' => 'admin@cloud9cafe.com',       // Admin login email
+        'password' => 'admin123',                // Admin password (plain text for demo)
+        'mobile' => '9876543210',                // Contact number
+        'role' => 'super_admin',                 // Admin role (super_admin, manager, staff)
+        'status' => 'Active'                     // Account status
+    ]);
+    // Note: Default admin credentials - Email: admin@cloud9cafe.com, Password: admin123
 }
-
-// Set charset
-mysqli_set_charset($con, $db_charset);
-
-// =====================================================
-// DATABASE SCHEMA (for reference)
-// =====================================================
-/*
-Tables:
-- cafe_users (id, fullname, email, password, gender, mobile, profile_picture, address, reward_points, status, role, token, created_at, updated_at)
-- cafe_admins (id, fullname, email, password, mobile, profile_picture, role, status, last_login, created_at, updated_at)
-- menu_items (id, name, description, price, category, image, stock_quantity, availability, featured, created_at, updated_at)
-- cafe_orders (id, order_number, user_id, total_amount, order_note, status, payment_status, payment_method, delivery_address, order_date, updated_at)
-- cafe_order_items (id, order_id, menu_item_id, quantity, unit_price, subtotal, customization)
-- cafe_cart (id, user_id, menu_item_id, quantity, customization, added_at)
-- cafe_offers (id, offer_code, title, description, discount_type, discount_value, min_order_amount, max_discount, valid_from, valid_until, usage_limit, usage_count, status, created_at)
-- contact_messages (id, name, email, subject, message, status, created_at, replied_at, replied_by)
-
-Run: database/install_database.php to set up
-*/
-
-// =====================================================
-// DEPRECATED: Old registration table
-// =====================================================
-// This table is no longer used. All new users go to cafe_users
+// =============================================================================
+// END SECTION: Default Admin Initialization
+// =============================================================================
 ?>

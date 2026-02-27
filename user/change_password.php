@@ -1,12 +1,12 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-// Check if user is logged in using cafe_user_id
-if (!isset($_SESSION['cafe_user_id'])) {
+require_once '../config/db_config.php';
+
+// Check if user is logged in
+if (!$auth->isUserLoggedIn()) {
     header("Location: login.php");
     exit();
 }
+
 $title = "Change Password - Cloud 9 Cafe";
 $active_sidebar = 'password';
 ob_start();
@@ -36,7 +36,7 @@ ob_start();
     <div class="card-body p-5">
         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
             <h2 class="fw-bold mb-0" style="color: #667eea;">Change Password</h2>
-            <a href="user_profile.php" class="btn btn-outline-secondary rounded-pill px-4">
+            <a href="profile.php" class="btn btn-outline-secondary rounded-pill px-4">
                 <i class="fas fa-arrow-left me-2"></i>Back to Profile
             </a>
         </div>

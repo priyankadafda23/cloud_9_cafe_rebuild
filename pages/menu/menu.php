@@ -2,24 +2,38 @@
 require_once '../../config/db_config.php';
 
 // Get filter parameters
-$category = isset($_GET['category']) ? mysqli_real_escape_string($con, $_GET['category']) : '';
-$search = isset($_GET['search']) ? mysqli_real_escape_string($con, $_GET['search']) : '';
+$category = $_GET['category'] ?? '';
+$search = $_GET['search'] ?? '';
 
-// Build query
-$where = ["availability = 'Available'"];
+// Get all available menu items
+$allItems = $db->select('menu_items', ['availability' => 'Available'], ['category' => 'ASC', 'name' => 'ASC']);
+
+// Filter by category
 if ($category) {
-    $where[] = "category = '$category'";
+    $allItems = array_filter($allItems, function($item) use ($category) {
+        return $item['category'] === $category;
+    });
 }
+
+// Filter by search
 if ($search) {
-    $where[] = "(name LIKE '%$search%' OR description LIKE '%$search%')";
+    $allItems = array_filter($allItems, function($item) use ($search) {
+        return stripos($item['name'], $search) !== false || 
+               stripos($item['description'], $search) !== false;
+    });
 }
-$where_sql = 'WHERE ' . implode(' AND ', $where);
 
-// Get menu items
-$items = mysqli_query($con, "SELECT * FROM menu_items $where_sql ORDER BY category, name");
+$items = array_values($allItems);
 
-// Get categories
-$categories = mysqli_query($con, "SELECT DISTINCT category FROM menu_items WHERE availability = 'Available' ORDER BY category");
+// Get categories from available items
+$categories = [];
+$allMenuItems = $db->select('menu_items', ['availability' => 'Available']);
+foreach ($allMenuItems as $item) {
+    if (!in_array($item['category'], $categories)) {
+        $categories[] = $item['category'];
+    }
+}
+sort($categories);
 
 $title = "Menu - Cloud 9 Cafe";
 ob_start();
@@ -64,17 +78,17 @@ ob_start();
                     <a href="menu.php" class="btn <?php echo !$category ? 'btn-primary' : 'btn-outline-secondary'; ?>">
                         All
                     </a>
-                    <?php while ($cat = mysqli_fetch_assoc($categories)): ?>
-                    <a href="?category=<?php echo urlencode($cat['category']); ?>" class="btn <?php echo $category == $cat['category'] ? 'btn-primary' : 'btn-outline-secondary'; ?>">
-                        <?php echo $cat['category']; ?>
+                    <?php foreach ($categories as $cat): ?>
+                    <a href="?category=<?php echo urlencode($cat); ?>" class="btn <?php echo $category == $cat ? 'btn-primary' : 'btn-outline-secondary'; ?>">
+                        <?php echo $cat; ?>
                     </a>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
         
         <!-- Menu Grid -->
-        <?php if (mysqli_num_rows($items) === 0): ?>
+        <?php if (empty($items)): ?>
         <div class="text-center py-5 animate-fade-in">
             <div class="mb-4">
                 <i class="fas fa-search fa-4x text-muted"></i>
@@ -87,7 +101,7 @@ ob_start();
         <div class="row g-4">
             <?php 
             $delay = 0;
-            while ($item = mysqli_fetch_assoc($items)): 
+            foreach ($items as $item): 
                 $delay = ($delay + 1) % 5;
             ?>
             <div class="col-md-6 col-lg-4 col-xl-3 animate-on-scroll stagger-<?php echo $delay; ?>">
@@ -155,7 +169,7 @@ ob_start();
                     </div>
                 </div>
             </div>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         </div>
         <?php endif; ?>
     </div>

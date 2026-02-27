@@ -34,7 +34,7 @@ if (file_exists($envPath)) {
 
 // Check required extensions
 echo "\n[3] Checking PHP Extensions...\n";
-$required = ['mysqli', 'mbstring', 'gd'];
+$required = ['mbstring', 'gd', 'json'];
 foreach ($required as $ext) {
     if (extension_loaded($ext)) {
         echo "    ✓ $ext loaded\n";
@@ -44,33 +44,38 @@ foreach ($required as $ext) {
     }
 }
 
-// Check database connection
-echo "\n[4] Checking Database Connection...\n";
+// Check JSON Database
+echo "\n[4] Checking JSON Database...\n";
+$dataDir = __DIR__ . '/../data/';
+if (!is_dir($dataDir)) {
+    mkdir($dataDir, 0755, true);
+    echo "    ✓ Created data directory\n";
+}
+
+if (is_writable($dataDir)) {
+    echo "    ✓ Data directory is writable\n";
+} else {
+    $errors[] = "Data directory is not writable";
+    echo "    ✗ Data directory is NOT writable\n";
+}
+
+// Initialize database if needed
 try {
-    require_once 'Env.php';
-    $dbConfig = [
-        'host' => Env::get('DB_HOST', 'localhost'),
-        'user' => Env::get('DB_USERNAME', 'root'),
-        'pass' => Env::get('DB_PASSWORD', ''),
-        'name' => Env::get('DB_DATABASE', ''),
-    ];
+    require_once 'JsonDB.php';
+    echo "    ✓ JsonDB class loaded\n";
     
-    $testCon = @mysqli_connect($dbConfig['host'], $dbConfig['user'], $dbConfig['pass']);
-    if ($testCon) {
-        echo "    ✓ Database connection successful\n";
-        if (mysqli_select_db($testCon, $dbConfig['name'])) {
-            echo "    ✓ Database '{$dbConfig['name']}' exists\n";
+    // Check if data files exist
+    $tables = ['cafe_users', 'cafe_admins', 'menu_items', 'cafe_orders', 'cafe_order_items', 'cafe_cart', 'cafe_offers', 'contact_messages', 'user_addresses'];
+    foreach ($tables as $table) {
+        $file = $dataDir . $table . '.json';
+        if (file_exists($file)) {
+            echo "    ✓ $table.json exists\n";
         } else {
-            $warnings[] = "Database '{$dbConfig['name']}' not found";
-            echo "    ⚠ Database '{$dbConfig['name']}' NOT found\n";
+            echo "    ⚠ $table.json will be created on first use\n";
         }
-        mysqli_close($testCon);
-    } else {
-        $errors[] = "Cannot connect to database: " . mysqli_connect_error();
-        echo "    ✗ Database connection failed\n";
     }
 } catch (Exception $e) {
-    $errors[] = "Error checking database: " . $e->getMessage();
+    $errors[] = "Error initializing JsonDB: " . $e->getMessage();
     echo "    ✗ Error: " . $e->getMessage() . "\n";
 }
 
@@ -78,6 +83,7 @@ try {
 echo "\n[5] Checking Folder Permissions...\n";
 $folders = [
     'assets/uploads' => __DIR__ . '/../assets/uploads',
+    'data' => $dataDir,
 ];
 foreach ($folders as $name => $path) {
     if (is_writable($path)) {
@@ -119,8 +125,8 @@ echo "=========================================\n";
 // Next steps
 if (empty($errors)) {
     echo "\n📋 NEXT STEPS:\n";
-    echo "1. Install database: http://localhost/cloud_9_cafe_rebuild/database/install_database.php\n";
-    echo "2. Access website: http://localhost/cloud_9_cafe_rebuild/\n";
-    echo "3. Login with: admin@cloud9cafe.com / admin123\n";
+    echo "1. Access website: http://localhost/cloud_9_cafe_rebuild/\n";
+    echo "2. Default Admin Login: admin@cloud9cafe.com / admin123\n";
+    echo "3. All data is stored in JSON files in ./data/ directory\n";
 }
 ?>

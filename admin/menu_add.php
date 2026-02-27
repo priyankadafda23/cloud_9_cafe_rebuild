@@ -1,33 +1,41 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
-if (!isset($_SESSION['cafe_admin_id'])) {
+if (!$auth->isAdminLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
+$admin_id = $auth->getAdminId();
+$admin_name = $auth->getUserName() ?? 'Admin';
+$admin_role = $auth->getAdminRole();
 
 $success = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = mysqli_real_escape_string($con, $_POST['name']);
-    $description = mysqli_real_escape_string($con, $_POST['description']);
-    $price = floatval($_POST['price']);
-    $category = mysqli_real_escape_string($con, $_POST['category']);
-    $stock = intval($_POST['stock_quantity']);
+    $name = $_POST['name'] ?? '';
+    $description = $_POST['description'] ?? '';
+    $price = floatval($_POST['price'] ?? 0);
+    $category = $_POST['category'] ?? '';
+    $stock = intval($_POST['stock_quantity'] ?? 0);
     $featured = isset($_POST['featured']) ? 1 : 0;
     
-    // First insert to get the menu item ID
-    $query = "INSERT INTO menu_items (name, description, price, category, image, stock_quantity, featured) 
-              VALUES ('$name', '$description', $price, '$category', '', $stock, $featured)";
+    // Insert menu item first to get the ID
+    $menuData = [
+        'name' => $name,
+        'description' => $description,
+        'price' => $price,
+        'category' => $category,
+        'image' => '',
+        'stock_quantity' => $stock,
+        'availability' => 'Available',
+        'featured' => $featured
+    ];
     
-    if (mysqli_query($con, $query)) {
-        $menu_id = mysqli_insert_id($con);
-        
+    $menu_id = $db->insert('menu_items', $menuData);
+    
+    if ($menu_id) {
         // Handle image upload to new path: assets/uploads/menu_images/{menu_id}/
         $image = '';
         if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
@@ -49,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                     $image = 'assets/uploads/menu_images/' . $menu_id . '/' . $filename;
                     
                     // Update the menu item with image path
-                    mysqli_query($con, "UPDATE menu_items SET image = '$image' WHERE id = $menu_id");
+                    $db->update('menu_items', ['image' => $image], ['id' => $menu_id]);
                 }
             }
         }

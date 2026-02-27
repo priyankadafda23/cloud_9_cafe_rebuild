@@ -1,55 +1,116 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-include_once '../config/db_config.php';
+/**
+ * =============================================================================
+ * CLOUD 9 CAFE - LOGIN PAGE
+ * =============================================================================
+ * 
+ * ROLE: Handles user and admin authentication. Displays login form and
+ *       processes login attempts. Uses cookie-based authentication via TokenAuth.
+ * 
+ * FLOW: 1. Includes database config
+ *       2. Checks if login form was submitted (POST request)
+ *       3. Validates credentials against database
+ *       4. If admin → sets admin cookie → redirects to admin dashboard
+ *       5. If user → sets user cookie → redirects to user dashboard
+ *       6. If invalid → shows error message
+ *       7. Displays login form
+ * 
+ * SECURITY: Passwords are compared in plain text (demo purposes).
+ *           In production, use password_hash() and password_verify()
+ */
 
-// Login processing
+// =============================================================================
+// SECTION: Database Configuration Include
+// DESCRIPTION: Includes database config which initializes JsonDB and TokenAuth
+// =============================================================================
+include_once '../config/db_config.php';
+// =============================================================================
+// END SECTION: Database Configuration Include
+// =============================================================================
+
+// =============================================================================
+// SECTION: Login Form Processing
+// DESCRIPTION: Process login form submission when user clicks "Login" button
+// =============================================================================
+
+// Check if login button was clicked (form submitted via POST)
+// FUNCTION: isset() - Checks if variable exists and is not NULL
 if (isset($_POST['login_btn'])) {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
     
-    // First check if it's an admin login (cafe_admins table)
-    $admin_query = "SELECT * FROM cafe_admins WHERE email = '$email' AND password = '$password'";
-    $admin_result = mysqli_query($con, $admin_query);
+    // Get form data and sanitize
+    // FUNCTION: $_POST[] - Superglobal array for HTTP POST data
+    $email = $_POST['email'];      // User's email address
+    $password = $_POST['password']; // User's password (plain text in demo)
     
-    if (mysqli_num_rows($admin_result) > 0) {
-        // Admin login successful
-        $admin = mysqli_fetch_assoc($admin_result);
-        $_SESSION['cafe_admin_id'] = $admin['id'];
-        $_SESSION['cafe_admin_name'] = $admin['fullname'];
-        $_SESSION['cafe_admin_role'] = $admin['role'];
+    // -------------------------------------------------------------------------
+    // STEP 1: Check if it's an ADMIN login (cafe_admins table)
+    // FUNCTION: $db->selectOne() - Fetches single matching record
+    // PARAMETERS: 'cafe_admins' = table, ['email' => $email, 'password' => $password] = WHERE
+    // -------------------------------------------------------------------------
+    $admin = $db->selectOne('cafe_admins', ['email' => $email, 'password' => $password]);
+    
+    if ($admin) {
+        // Admin found - Set authentication cookie
+        // FUNCTION: $auth->loginAdmin() - Sets admin auth cookie with role
+        // PARAMETERS: admin_id, fullname, role
+        $auth->loginAdmin($admin['id'], $admin['fullname'], $admin['role']);
+        
+        // Update last login timestamp
+        // FUNCTION: $db->update() - Updates record in database
+        $db->update('cafe_admins', ['last_login' => date('Y-m-d H:i:s')], ['id' => $admin['id']]);
+        
+        // Redirect to admin dashboard
+        // FUNCTION: header() - Sends HTTP header for redirection
         header("Location: ../admin/dashboard.php");
-        exit();
+        exit();  // Stop script execution
     }
     
-    // If not admin, check regular user (cafe_users table)
-    $user_query = "SELECT * FROM cafe_users WHERE email = '$email' AND password = '$password'";
-    $user_result = mysqli_query($con, $user_query);
+    // -------------------------------------------------------------------------
+    // STEP 2: Check if it's a USER login (cafe_users table)
+    // -------------------------------------------------------------------------
+    $user = $db->selectOne('cafe_users', ['email' => $email, 'password' => $password]);
     
-    if (mysqli_num_rows($user_result) > 0) {
-        $user = mysqli_fetch_assoc($user_result);
-        // Set session variables with cafe_ prefix
-        $_SESSION['cafe_user_id'] = $user['id'];
-        $_SESSION['cafe_user_name'] = $user['fullname'];
+    if ($user) {
+        // User found - Set authentication cookie
+        // FUNCTION: $auth->loginUser() - Sets user auth cookie
+        // PARAMETERS: user_id, fullname, role (defaults to 'User')
+        $auth->loginUser($user['id'], $user['fullname'], $user['role'] ?? 'User');
+        
+        // Redirect to user dashboard
         header("Location: ../user/dashboard.php");
         exit();
     } else {
-        $login_error = "Invalid email or password";
+        // No match found - Invalid credentials
+        $login_error = "Invalid email or password";  // Error message to display
     }
 }
+// =============================================================================
+// END SECTION: Login Form Processing
+// =============================================================================
 
+// =============================================================================
+// SECTION: Page Title Setup
+// DESCRIPTION: Set page title for browser tab
+// =============================================================================
 $title = "Login - Cloud 9 Cafe";
+
+// Start output buffering to capture content for layout
 ob_start();
 ?>
 
+<!-- ========================================================================= -->
+<!-- SECTION: Login Form Container -->
+<!-- DESCRIPTION: Card with login form containing email, password fields -->
+<!-- ========================================================================= -->
 <div class="container py-5">
     <div class="row justify-content-center align-items-center min-vh-75">
         <div class="col-lg-5 col-md-6">
+            
             <!-- Login Card -->
             <div class="card border-0 shadow-lg animate-fade-in-up">
                 <div class="card-body p-4 p-md-5">
-                    <!-- Header -->
+                    
+                    <!-- Header with Logo -->
                     <div class="text-center mb-4">
                         <div class="mb-3">
                             <div class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background: var(--gradient-primary);">
@@ -60,7 +121,7 @@ ob_start();
                         <p class="text-muted mb-0">Sign in to your Cloud 9 account</p>
                     </div>
                     
-                    <!-- Error Message -->
+                    <!-- Error Message Display - Shows only if $login_error exists -->
                     <?php if (isset($login_error)): ?>
                     <div class="alert alert-danger d-flex align-items-center" role="alert">
                         <i class="fas fa-exclamation-circle me-2"></i>
@@ -69,30 +130,44 @@ ob_start();
                     <?php endif; ?>
 
                     <!-- Login Form -->
+                    <!-- FORM ACTION: Submits to this same file (login.php) via POST method -->
                     <form action="login.php" method="POST" id="loginForm">
+                        
+                        <!-- Email Field -->
                         <div class="mb-4">
                             <label for="email" class="form-label fw-medium">Email Address</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">
                                     <i class="fas fa-envelope text-muted"></i>
                                 </span>
-                                <input type="email" class="form-control border-start-0 ps-0" id="email" name="email" placeholder="Enter your email" required>
+                                <!-- data-validation: Used by validate.js for client-side validation -->
+                                <input type="email" class="form-control border-start-0 ps-0" id="email" name="email" 
+                                       placeholder="Enter your email" 
+                                       data-validation="required,email">
                             </div>
+                            <!-- Error display container for email field -->
+                            <div id="email_error" class="invalid-feedback d-block"></div>
                         </div>
 
+                        <!-- Password Field -->
                         <div class="mb-4">
                             <label for="password" class="form-label fw-medium">Password</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">
-                                    <i class="fas fa-lock text-muted"></i>
+                                <i class="fas fa-lock text-muted"></i>
                                 </span>
-                                <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" placeholder="Enter your password" required>
+                                <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" 
+                                       placeholder="Enter your password" 
+                                       data-validation="required,min" data-min="6">
+                                <!-- Toggle Password Visibility Button -->
                                 <button type="button" class="btn btn-outline-secondary border-start-0 toggle-password" data-target="#password">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
+                            <div id="password_error" class="invalid-feedback d-block"></div>
                         </div>
 
+                        <!-- Remember Me & Forgot Password Row -->
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="remember" name="remember">
@@ -100,106 +175,56 @@ ob_start();
                                     Remember me
                                 </label>
                             </div>
-                            <a href="forgot_password.php" class="text-primary small fw-medium">Forgot Password?</a>
+                            <!-- Forgot Password Link - Click redirects to: forgot_password.php -->
+                            <a href="forgot_password.php" class="text-primary small text-decoration-none">Forgot Password?</a>
                         </div>
 
-                        <button type="submit" name="login_btn" class="btn btn-primary w-100 btn-lg mb-4">
+                        <!-- Login Button -->
+                        <!-- On click: Submits form with name="login_btn" -->
+                        <button type="submit" name="login_btn" class="btn btn-primary w-100 mb-3">
                             <i class="fas fa-sign-in-alt me-2"></i>Sign In
                         </button>
 
-                        <!-- Social Login -->
+                        <!-- Divider -->
+                        <div class="text-center mb-3">
+                            <span class="text-muted small">or</span>
+                        </div>
+
+                        <!-- Register Link -->
                         <div class="text-center">
-                            <p class="text-muted small mb-3">Or continue with</p>
-                            <div class="d-flex gap-2 justify-content-center mb-4">
-                                <button type="button" class="btn btn-outline-secondary btn-icon" style="width: 44px; height: 44px;">
-                                    <i class="fab fa-google"></i>
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-icon" style="width: 44px; height: 44px;">
-                                    <i class="fab fa-facebook-f"></i>
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary btn-icon" style="width: 44px; height: 44px;">
-                                    <i class="fab fa-apple"></i>
-                                </button>
-                            </div>
-                            
-                            <p class="text-muted mb-0">
-                                Don't have an account? 
-                                <a href="register.php" class="text-primary fw-bold">Sign Up</a>
-                            </p>
+                            <span class="text-muted small">Don't have an account?</span>
+                            <!-- Register Link - Click redirects to: register.php -->
+                            <a href="register.php" class="text-primary fw-semibold small text-decoration-none ms-1">Create Account</a>
                         </div>
                     </form>
+                    <!-- END: Login Form -->
+
                 </div>
             </div>
             
-            <!-- Back to Home -->
+            <!-- Back to Home Link -->
             <div class="text-center mt-4">
-                <a href="../pages/index.php" class="text-muted text-decoration-none">
-                    <i class="fas fa-arrow-left me-2"></i>Back to Home
+                <!-- Click redirects to: ../pages/index.php (Homepage) -->
+                <a href="../pages/index.php" class="text-muted text-decoration-none small">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Home
                 </a>
             </div>
-        </div>
-        
-        <!-- Side Image (Desktop) -->
-        <div class="col-lg-7 d-none d-lg-block">
-            <div class="position-relative">
-                <img src="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=800" alt="Coffee Shop" class="img-fluid rounded-4 shadow-lg" style="height: 600px; object-fit: cover; width: 100%;">
-                <div class="position-absolute bottom-0 start-0 end-0 p-4 m-4 rounded-4" style="background: rgba(107, 79, 75, 0.95);">
-                    <h4 class="fw-bold text-white mb-2">
-                        <i class="fas fa-quote-left me-2 text-accent"></i>
-                        Life begins after coffee
-                    </h4>
-                    <p class="text-white-50 mb-0">Join thousands of coffee lovers who have made Cloud 9 their daily destination.</p>
-                </div>
-            </div>
+            
         </div>
     </div>
 </div>
-
-<style>
-    .min-vh-75 {
-        min-height: 75vh;
-    }
-    
-    .text-white-50 {
-        color: rgba(255, 255, 255, 0.7) !important;
-    }
-    
-    /* Custom checkbox styling */
-    .form-check-input:checked {
-        background-color: var(--cafe-primary);
-        border-color: var(--cafe-primary);
-    }
-    
-    /* Button icon sizing */
-    .btn-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0;
-    }
-</style>
-
-<script>
-    // Toggle password visibility
-    document.querySelectorAll('.toggle-password').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const input = document.querySelector(this.dataset.target);
-            const icon = this.querySelector('i');
-            
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
-    });
-</script>
+<!-- ========================================================================= -->
+<!-- END SECTION: Login Form Container -->
+<!-- ========================================================================= -->
 
 <?php
+// =============================================================================
+// SECTION: Include Layout Wrapper
+// DESCRIPTION: Capture output buffer and include the main layout file
+// =============================================================================
 $content = ob_get_clean();
 include '../includes/layout.php';
+// =============================================================================
+// END SECTION: Include Layout Wrapper
+// =============================================================================
 ?>

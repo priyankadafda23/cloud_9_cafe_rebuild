@@ -1,14 +1,14 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
-if (!isset($_SESSION['cafe_admin_id'])) {
+if (!$auth->isAdminLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
+$admin_id = $auth->getAdminId();
+$admin_name = $auth->getUserName() ?? 'Admin';
+$admin_role = $auth->getAdminRole();
 
 if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
     header("Location: menu.php");
@@ -18,25 +18,33 @@ if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
 $item_id = intval($_GET['id']);
 
 // Get item
-$item_result = mysqli_query($con, "SELECT * FROM menu_items WHERE id = $item_id");
-if (mysqli_num_rows($item_result) == 0) {
+$item = $db->selectOne('menu_items', ['id' => $item_id]);
+if (!$item) {
     header("Location: menu.php");
     exit();
 }
-$item = mysqli_fetch_assoc($item_result);
 
 $success = '';
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $name = mysqli_real_escape_string($con, $_POST['name']);
-    $description = mysqli_real_escape_string($con, $_POST['description']);
-    $price = floatval($_POST['price']);
-    $category = mysqli_real_escape_string($con, $_POST['category']);
-    $stock = intval($_POST['stock_quantity']);
+    $name = $_POST['name'] ?? '';
+    $description = $_POST['description'] ?? '';
+    $price = floatval($_POST['price'] ?? 0);
+    $category = $_POST['category'] ?? '';
+    $stock = intval($_POST['stock_quantity'] ?? 0);
     $featured = isset($_POST['featured']) ? 1 : 0;
     
-    $image_sql = '';
+    $updateData = [
+        'name' => $name,
+        'description' => $description,
+        'price' => $price,
+        'category' => $category,
+        'stock_quantity' => $stock,
+        'featured' => $featured
+    ];
+    
+    // Handle image upload
     if (isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
         // Upload to new path: assets/uploads/menu_images/{menu_id}/
         $upload_dir = '../assets/uploads/menu_images/' . $item_id . '/';
@@ -60,22 +68,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $filename = 'image1.' . $extension;
             if (move_uploaded_file($_FILES['image']['tmp_name'], $upload_dir . $filename)) {
                 $image = 'assets/uploads/menu_images/' . $item_id . '/' . $filename;
-                $image_sql = ", image = '$image'";
+                $updateData['image'] = $image;
             }
         }
     }
     
-    $query = "UPDATE menu_items SET 
-              name = '$name', 
-              description = '$description', 
-              price = $price, 
-              category = '$category', 
-              stock_quantity = $stock, 
-              featured = $featured
-              $image_sql 
-              WHERE id = $item_id";
+    $updated = $db->update('menu_items', $updateData, ['id' => $item_id]);
     
-    if (mysqli_query($con, $query)) {
+    if ($updated) {
         header("Location: menu.php");
         exit();
     } else {

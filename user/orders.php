@@ -1,27 +1,51 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
-// Check if user is logged in using cafe_user_id
-if (!isset($_SESSION['cafe_user_id'])) {
+// Check if user is logged in
+if (!$auth->isUserLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
 
-$user_id = $_SESSION['cafe_user_id'];
+$user_id = $auth->getUserId();
 
 // Get filter status
 $filter_status = $_GET['status'] ?? 'all';
 
-// Build query
-$order_query = "SELECT * FROM cafe_orders WHERE user_id = $user_id";
-if ($filter_status !== 'all' && in_array($filter_status, ['Pending', 'Preparing', 'Completed', 'Cancelled'])) {
-    $order_query .= " AND status = '$filter_status'";
+// Build query conditions
+$where = ['user_id' => $user_id];
+if ($filter_status !== 'all' && in_array($filter_status, ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Delivered', 'Cancelled'])) {
+    $where['status'] = $filter_status;
 }
-$order_query .= " ORDER BY order_date DESC";
-$order_result = mysqli_query($con, $order_query);
+
+// Get orders
+$orders = $db->select('cafe_orders', $where, ['order_date' => 'DESC']);
+
+// Handle order cancellation
+if (isset($_GET['cancel_order'])) {
+    $order_id = intval($_GET['cancel_order']);
+    
+    // Verify order belongs to user and is pending
+    $order = $db->selectOne('cafe_orders', ['id' => $order_id, 'user_id' => $user_id]);
+    
+    if ($order && $order['status'] === 'Pending') {
+        // Restore stock
+        $items = $db->select('cafe_order_items', ['order_id' => $order_id]);
+        foreach ($items as $item) {
+            $menuItem = $db->selectOne('menu_items', ['id' => $item['menu_item_id']]);
+            if ($menuItem) {
+                $newStock = $menuItem['stock_quantity'] + $item['quantity'];
+                $db->update('menu_items', ['stock_quantity' => $newStock], ['id' => $item['menu_item_id']]);
+            }
+        }
+        
+        // Cancel order
+        $db->update('cafe_orders', ['status' => 'Cancelled'], ['id' => $order_id]);
+        
+        header("Location: orders.php?msg=order_cancelled");
+        exit();
+    }
+}
 
 $title = "My Orders - Cloud 9 Cafe";
 $active_sidebar = 'orders';
@@ -77,6 +101,9 @@ ob_start();
     .status-preparing { background: #cce5ff; color: #004085; }
     .status-completed { background: #d4edda; color: #155724; }
     .status-cancelled { background: #f8d7da; color: #721c24; }
+    .status-confirmed { background: #d1ecf1; color: #0c5460; }
+    .status-ready { background: #d4edda; color: #155724; }
+    .status-delivered { background: #d4edda; color: #155724; }
 </style>
 
 <div class="card border-0 shadow-lg mb-4">
@@ -87,15 +114,17 @@ ob_start();
                 <select name="status" class="form-select w-auto" onchange="this.form.submit()">
                     <option value="all" <?php echo $filter_status === 'all' ? 'selected' : ''; ?>>All Orders</option>
                     <option value="Pending" <?php echo $filter_status === 'Pending' ? 'selected' : ''; ?>>Pending</option>
+                    <option value="Confirmed" <?php echo $filter_status === 'Confirmed' ? 'selected' : ''; ?>>Confirmed</option>
                     <option value="Preparing" <?php echo $filter_status === 'Preparing' ? 'selected' : ''; ?>>Preparing</option>
-                    <option value="Completed" <?php echo $filter_status === 'Completed' ? 'selected' : ''; ?>>Completed</option>
+                    <option value="Ready" <?php echo $filter_status === 'Ready' ? 'selected' : ''; ?>>Ready</option>
+                    <option value="Delivered" <?php echo $filter_status === 'Delivered' ? 'selected' : ''; ?>>Delivered</option>
                     <option value="Cancelled" <?php echo $filter_status === 'Cancelled' ? 'selected' : ''; ?>>Cancelled</option>
                 </select>
             </form>
         </div>
 
         <div class="list-group list-group-flush">
-            <?php if (mysqli_num_rows($order_result) === 0): ?>
+            <?php if (empty($orders)): ?>
             <div class="text-center py-5">
                 <i class="fas fa-box-open fa-4x text-muted mb-3"></i>
                 <h5 class="text-muted">No orders found</h5>
@@ -104,20 +133,17 @@ ob_start();
                 </a>
             </div>
             <?php else: ?>
-            <?php while ($order = mysqli_fetch_assoc($order_result)): 
+            <?php foreach ($orders as $order): 
                 // Get order items count
-                $items_query = "SELECT COUNT(*) as count FROM cafe_order_items WHERE order_id = {$order['id']}";
-                $items_result = mysqli_query($con, $items_query);
-                $items_count = mysqli_fetch_assoc($items_result)['count'];
+                $items = $db->select('cafe_order_items', ['order_id' => $order['id']]);
+                $items_count = count($items);
                 
-                // Get first item image
-                $first_item_query = "SELECT m.image, m.name 
-                                    FROM cafe_order_items oi 
-                                    JOIN menu_items m ON oi.menu_item_id = m.id 
-                                    WHERE oi.order_id = {$order['id']} 
-                                    LIMIT 1";
-                $first_item_result = mysqli_query($con, $first_item_query);
-                $first_item = mysqli_fetch_assoc($first_item_result);
+                // Get first item
+                $firstItem = $items[0] ?? null;
+                $firstMenuItem = null;
+                if ($firstItem) {
+                    $firstMenuItem = $db->selectOne('menu_items', ['id' => $firstItem['menu_item_id']]);
+                }
                 
                 // Status badge class
                 $status_class = '';
@@ -127,12 +153,20 @@ ob_start();
                         $status_class = 'status-pending';
                         $status_icon = 'fa-clock';
                         break;
+                    case 'Confirmed':
+                        $status_class = 'status-confirmed';
+                        $status_icon = 'fa-check';
+                        break;
                     case 'Preparing':
                         $status_class = 'status-preparing';
                         $status_icon = 'fa-fire';
                         break;
-                    case 'Completed':
-                        $status_class = 'status-completed';
+                    case 'Ready':
+                        $status_class = 'status-ready';
+                        $status_icon = 'fa-box';
+                        break;
+                    case 'Delivered':
+                        $status_class = 'status-delivered';
                         $status_icon = 'fa-check-circle';
                         break;
                     case 'Cancelled':
@@ -152,11 +186,11 @@ ob_start();
                     </span>
                 </div>
                 <div class="d-flex align-items-center mb-3">
-                    <img src="<?php echo $first_item['image'] ? '../assets/images/' . $first_item['image'] : '../assets/images/product-1.jpg'; ?>" 
+                    <img src="<?php echo $firstMenuItem && $firstMenuItem['image'] ? '../assets/images/' . $firstMenuItem['image'] : '../assets/images/product-1.jpg'; ?>" 
                          alt="" class="rounded me-3"
                          style="width: 60px; height: 60px; object-fit: cover; background: #f8f9fa;">
                     <div class="flex-grow-1">
-                        <h6 class="fw-semibold mb-1"><?php echo htmlspecialchars($first_item['name'] ?? 'Item'); ?></h6>
+                        <h6 class="fw-semibold mb-1"><?php echo htmlspecialchars($firstMenuItem['name'] ?? 'Item'); ?></h6>
                         <p class="text-muted small mb-0"><?php echo $items_count; ?> item<?php echo $items_count > 1 ? 's' : ''; ?></p>
                     </div>
                     <h5 class="fw-bold mb-0">₹<?php echo number_format($order['total_amount'], 2); ?></h5>
@@ -179,7 +213,7 @@ ob_start();
                         <i class="fas fa-times me-1"></i>Cancel
                     </a>
                     <?php endif; ?>
-                    <?php if ($order['status'] === 'Completed'): ?>
+                    <?php if ($order['status'] === 'Delivered'): ?>
                     <button class="btn btn-sm btn-outline-success rounded-pill px-3">
                         <i class="fas fa-redo me-1"></i>Reorder
                     </button>
@@ -204,25 +238,39 @@ ob_start();
                                 <h6 class="fw-bold mb-3">Order Status</h6>
                                 <div class="d-flex justify-content-between">
                                     <div class="text-center flex-fill">
-                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center <?php echo in_array($order['status'], ['Pending', 'Preparing', 'Completed']) ? 'bg-success text-white' : 'bg-light text-muted'; ?>"
+                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center <?php echo in_array($order['status'], ['Pending', 'Confirmed', 'Preparing', 'Ready', 'Delivered']) ? 'bg-success text-white' : 'bg-light text-muted'; ?>"
                                              style="width: 40px; height: 40px;">
                                             <i class="fas fa-clipboard-check"></i>
                                         </div>
                                         <small>Pending</small>
                                     </div>
                                     <div class="text-center flex-fill">
-                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center <?php echo in_array($order['status'], ['Preparing', 'Completed']) ? 'bg-success text-white' : 'bg-light text-muted'; ?>"
+                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center <?php echo in_array($order['status'], ['Confirmed', 'Preparing', 'Ready', 'Delivered']) ? 'bg-success text-white' : 'bg-light text-muted'; ?>"
+                                             style="width: 40px; height: 40px;">
+                                            <i class="fas fa-check"></i>
+                                        </div>
+                                        <small>Confirmed</small>
+                                    </div>
+                                    <div class="text-center flex-fill">
+                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center <?php echo in_array($order['status'], ['Preparing', 'Ready', 'Delivered']) ? 'bg-success text-white' : 'bg-light text-muted'; ?>"
                                              style="width: 40px; height: 40px;">
                                             <i class="fas fa-fire"></i>
                                         </div>
                                         <small>Preparing</small>
                                     </div>
                                     <div class="text-center flex-fill">
-                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center <?php echo $order['status'] === 'Completed' ? 'bg-success text-white' : 'bg-light text-muted'; ?>"
+                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center <?php echo in_array($order['status'], ['Ready', 'Delivered']) ? 'bg-success text-white' : 'bg-light text-muted'; ?>"
+                                             style="width: 40px; height: 40px;">
+                                            <i class="fas fa-box"></i>
+                                        </div>
+                                        <small>Ready</small>
+                                    </div>
+                                    <div class="text-center flex-fill">
+                                        <div class="rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center <?php echo $order['status'] === 'Delivered' ? 'bg-success text-white' : 'bg-light text-muted'; ?>"
                                              style="width: 40px; height: 40px;">
                                             <i class="fas fa-check"></i>
                                         </div>
-                                        <small>Completed</small>
+                                        <small>Delivered</small>
                                     </div>
                                 </div>
                             </div>
@@ -230,21 +278,17 @@ ob_start();
                             <!-- Order Items -->
                             <div class="mb-4">
                                 <h6 class="fw-bold mb-3">Order Items</h6>
-                                <?php
-                                $detail_items = mysqli_query($con, "SELECT oi.*, m.name, m.image 
-                                                                  FROM cafe_order_items oi 
-                                                                  JOIN menu_items m ON oi.menu_item_id = m.id 
-                                                                  WHERE oi.order_id = {$order['id']}");
-                                while ($item = mysqli_fetch_assoc($detail_items)):
+                                <?php foreach ($items as $item): 
+                                    $menuItem = $db->selectOne('menu_items', ['id' => $item['menu_item_id']]);
                                 ?>
                                 <div class="card border mb-2">
                                     <div class="card-body p-3">
                                         <div class="d-flex align-items-center">
-                                            <img src="<?php echo $item['image'] ? '../assets/images/' . $item['image'] : '../assets/images/product-1.jpg'; ?>" 
+                                            <img src="<?php echo $menuItem && $menuItem['image'] ? '../assets/images/' . $menuItem['image'] : '../assets/images/product-1.jpg'; ?>" 
                                                  alt="" class="rounded me-3"
                                                  style="width: 60px; height: 60px; object-fit: cover; background: #f8f9fa;">
                                             <div class="flex-grow-1">
-                                                <h6 class="fw-semibold mb-1"><?php echo htmlspecialchars($item['name']); ?></h6>
+                                                <h6 class="fw-semibold mb-1"><?php echo htmlspecialchars($menuItem['name'] ?? 'Item'); ?></h6>
                                                 <p class="text-muted small mb-0">Qty: <?php echo $item['quantity']; ?> × ₹<?php echo number_format($item['unit_price'], 2); ?></p>
                                                 <?php if ($item['customization']): ?>
                                                 <small class="text-info"><i class="fas fa-info-circle me-1"></i><?php echo htmlspecialchars($item['customization']); ?></small>
@@ -254,7 +298,7 @@ ob_start();
                                         </div>
                                     </div>
                                 </div>
-                                <?php endwhile; ?>
+                                <?php endforeach; ?>
                             </div>
 
                             <!-- Delivery Address -->
@@ -310,7 +354,7 @@ ob_start();
                     </div>
                 </div>
             </div>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -319,28 +363,4 @@ ob_start();
 <?php
 $dashboard_content = ob_get_clean();
 include '../includes/dashboard_layout.php';
-
-// Handle order cancellation
-if (isset($_GET['cancel_order'])) {
-    $order_id = intval($_GET['cancel_order']);
-    
-    // Verify order belongs to user and is pending
-    $check_query = "SELECT status FROM cafe_orders WHERE id = $order_id AND user_id = $user_id";
-    $check_result = mysqli_query($con, $check_query);
-    $order = mysqli_fetch_assoc($check_result);
-    
-    if ($order && $order['status'] === 'Pending') {
-        // Restore stock
-        $items = mysqli_query($con, "SELECT menu_item_id, quantity FROM cafe_order_items WHERE order_id = $order_id");
-        while ($item = mysqli_fetch_assoc($items)) {
-            mysqli_query($con, "UPDATE menu_items SET stock_quantity = stock_quantity + {$item['quantity']} WHERE id = {$item['menu_item_id']}");
-        }
-        
-        // Cancel order
-        mysqli_query($con, "UPDATE cafe_orders SET status = 'Cancelled' WHERE id = $order_id");
-        
-        header("Location: orders.php?msg=order_cancelled");
-        exit();
-    }
-}
 ?>

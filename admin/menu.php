@@ -1,19 +1,19 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
-if (!isset($_SESSION['cafe_admin_id'])) {
+if (!$auth->isAdminLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
+$admin_id = $auth->getAdminId();
+$admin_name = $auth->getUserName() ?? 'Admin';
+$admin_role = $auth->getAdminRole();
 
 // Handle delete
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $item_id = intval($_GET['delete']);
-    mysqli_query($con, "DELETE FROM menu_items WHERE id = $item_id");
+    $db->delete('menu_items', ['id' => $item_id]);
     header("Location: menu.php");
     exit();
 }
@@ -21,10 +21,11 @@ if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
 // Handle availability toggle
 if (isset($_GET['toggle']) && is_numeric($_GET['toggle'])) {
     $item_id = intval($_GET['toggle']);
-    $current = mysqli_query($con, "SELECT availability FROM menu_items WHERE id = $item_id");
-    $avail = mysqli_fetch_assoc($current)['availability'];
-    $new_avail = ($avail == 'Available') ? 'Out of Stock' : 'Available';
-    mysqli_query($con, "UPDATE menu_items SET availability = '$new_avail' WHERE id = $item_id");
+    $item = $db->selectOne('menu_items', ['id' => $item_id]);
+    if ($item) {
+        $new_avail = ($item['availability'] == 'Available') ? 'Out of Stock' : 'Available';
+        $db->update('menu_items', ['availability' => $new_avail], ['id' => $item_id]);
+    }
     header("Location: menu.php");
     exit();
 }
@@ -32,10 +33,11 @@ if (isset($_GET['toggle']) && is_numeric($_GET['toggle'])) {
 // Handle featured toggle
 if (isset($_GET['featured']) && is_numeric($_GET['featured'])) {
     $item_id = intval($_GET['featured']);
-    $current = mysqli_query($con, "SELECT featured FROM menu_items WHERE id = $item_id");
-    $feat = mysqli_fetch_assoc($current)['featured'];
-    $new_feat = $feat ? 0 : 1;
-    mysqli_query($con, "UPDATE menu_items SET featured = $new_feat WHERE id = $item_id");
+    $item = $db->selectOne('menu_items', ['id' => $item_id]);
+    if ($item) {
+        $new_feat = $item['featured'] ? 0 : 1;
+        $db->update('menu_items', ['featured' => $new_feat], ['id' => $item_id]);
+    }
     header("Location: menu.php");
     exit();
 }
@@ -46,25 +48,32 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 // Filter
-$category = isset($_GET['category']) ? mysqli_real_escape_string($con, $_GET['category']) : '';
-$search = isset($_GET['search']) ? mysqli_real_escape_string($con, $_GET['search']) : '';
+$category = $_GET['category'] ?? '';
+$search = $_GET['search'] ?? '';
 
-$where = [];
+// Get all menu items
+$allItems = $db->select('menu_items', [], ['category' => 'ASC', 'name' => 'ASC']);
+
+// Filter by category
 if ($category) {
-    $where[] = "category = '$category'";
+    $allItems = array_filter($allItems, function($item) use ($category) {
+        return $item['category'] === $category;
+    });
 }
-if ($search) {
-    $where[] = "(name LIKE '%$search%' OR description LIKE '%$search%')";
-}
-$where_sql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
-// Get total count
-$count_result = mysqli_query($con, "SELECT COUNT(*) as count FROM menu_items $where_sql");
-$total_items = mysqli_fetch_assoc($count_result)['count'];
+// Filter by search
+if ($search) {
+    $allItems = array_filter($allItems, function($item) use ($search) {
+        return stripos($item['name'], $search) !== false || 
+               stripos($item['description'], $search) !== false;
+    });
+}
+
+$total_items = count($allItems);
 $total_pages = ceil($total_items / $limit);
 
-// Get menu items
-$items = mysqli_query($con, "SELECT * FROM menu_items $where_sql ORDER BY category, name LIMIT $limit OFFSET $offset");
+// Get paginated items
+$items = array_slice($allItems, $offset, $limit);
 
 $title = "Menu Items - Cloud 9 Cafe";
 $page_title = "Menu Management";
@@ -135,7 +144,7 @@ ob_start();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (mysqli_num_rows($items) === 0): ?>
+                    <?php if (empty($items)): ?>
                     <tr>
                         <td colspan="7" class="text-center py-5">
                             <i class="fas fa-coffee fa-3x text-muted mb-3"></i>
@@ -143,7 +152,7 @@ ob_start();
                         </td>
                     </tr>
                     <?php else: ?>
-                    <?php while ($item = mysqli_fetch_assoc($items)): ?>
+                    <?php foreach ($items as $item): ?>
                     <tr>
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
@@ -208,7 +217,7 @@ ob_start();
                             </a>
                         </td>
                     </tr>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
             </table>

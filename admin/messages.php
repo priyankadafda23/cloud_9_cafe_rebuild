@@ -1,20 +1,20 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
-if (!isset($_SESSION['cafe_admin_id'])) {
+if (!$auth->isAdminLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
+$admin_id = $auth->getAdminId();
+$admin_name = $auth->getUserName() ?? 'Admin';
+$admin_role = $auth->getAdminRole();
 
 // Handle status update
 if (isset($_GET['mark']) && is_numeric($_GET['mark'])) {
     $msg_id = intval($_GET['mark']);
-    $status = isset($_GET['status']) ? mysqli_real_escape_string($con, $_GET['status']) : 'Read';
-    mysqli_query($con, "UPDATE contact_messages SET status = '$status' WHERE id = $msg_id");
+    $status = $_GET['status'] ?? 'Read';
+    $db->update('contact_messages', ['status' => $status], ['id' => $msg_id]);
     header("Location: messages.php");
     exit();
 }
@@ -22,13 +22,13 @@ if (isset($_GET['mark']) && is_numeric($_GET['mark'])) {
 // Handle delete
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $msg_id = intval($_GET['delete']);
-    mysqli_query($con, "DELETE FROM contact_messages WHERE id = $msg_id");
+    $db->delete('contact_messages', ['id' => $msg_id]);
     header("Location: messages.php");
     exit();
 }
 
 // Get messages
-$messages = mysqli_query($con, "SELECT * FROM contact_messages ORDER BY created_at DESC");
+$messages = $db->select('contact_messages', [], ['created_at' => 'DESC']);
 
 $title = "Messages - Cloud 9 Cafe";
 $active_sidebar = 'messages';
@@ -124,7 +124,7 @@ ob_start();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (mysqli_num_rows($messages) === 0): ?>
+                    <?php if (empty($messages)): ?>
                     <tr>
                         <td colspan="6" class="text-center py-5">
                             <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
@@ -132,7 +132,7 @@ ob_start();
                         </td>
                     </tr>
                     <?php else: ?>
-                    <?php while ($msg = mysqli_fetch_assoc($messages)): 
+                    <?php foreach ($messages as $msg): 
                         $status_class = '';
                         switch ($msg['status']) {
                             case 'New': $status_class = 'status-new'; break;
@@ -210,7 +210,7 @@ ob_start();
                             </div>
                         </div>
                     </div>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
             </table>

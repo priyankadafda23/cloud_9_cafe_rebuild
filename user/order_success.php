@@ -3,30 +3,19 @@
  * Cloud 9 Cafe - Order Success Page
  */
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if user is logged in
-if (!isset($_SESSION['cafe_user_id'])) {
+if (!$auth->isUserLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
 
-// Check if order was successful
-if (!isset($_SESSION['order_success'])) {
-    header("Location: dashboard.php");
-    exit();
-}
-
-$user_id = $_SESSION['cafe_user_id'];
+$user_id = $auth->getUserId();
 $order_id = intval($_GET['order_id'] ?? 0);
 
 // Get order details
-$order_query = "SELECT * FROM cafe_orders WHERE id = $order_id AND user_id = $user_id";
-$order_result = mysqli_query($con, $order_query);
-$order = mysqli_fetch_assoc($order_result);
+$order = $db->selectOne('cafe_orders', ['id' => $order_id, 'user_id' => $user_id]);
 
 if (!$order) {
     header("Location: dashboard.php");
@@ -34,16 +23,11 @@ if (!$order) {
 }
 
 // Get order items
-$items_query = "SELECT oi.*, m.name, m.image 
-                FROM cafe_order_items oi 
-                JOIN menu_items m ON oi.menu_item_id = m.id 
-                WHERE oi.order_id = $order_id";
-$items_result = mysqli_query($con, $items_query);
+$orderItems = $db->select('cafe_order_items', ['order_id' => $order_id]);
 
 // Get user's current reward points
-$points_query = "SELECT reward_points FROM cafe_users WHERE id = $user_id";
-$points_result = mysqli_query($con, $points_query);
-$user_points = mysqli_fetch_assoc($points_result)['reward_points'];
+$user = $db->selectOne('cafe_users', ['id' => $user_id]);
+$user_points = $user['reward_points'] ?? 0;
 
 $title = "Order Success - Cloud 9 Cafe";
 ob_start();
@@ -128,15 +112,17 @@ ob_start();
                         <div class="card-body">
                             <h5 class="fw-bold mb-3">Order Summary</h5>
                             
-                            <?php while ($item = mysqli_fetch_assoc($items_result)): ?>
+                            <?php foreach ($orderItems as $item): 
+                                $menuItem = $db->selectOne('menu_items', ['id' => $item['menu_item_id']]);
+                            ?>
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <div class="text-start">
-                                    <span class="fw-semibold"><?php echo htmlspecialchars($item['name']); ?></span>
+                                    <span class="fw-semibold"><?php echo htmlspecialchars($menuItem['name'] ?? 'Unknown Item'); ?></span>
                                     <small class="text-muted d-block">Qty: <?php echo $item['quantity']; ?></small>
                                 </div>
                                 <span class="fw-bold">₹<?php echo number_format($item['subtotal'], 2); ?></span>
                             </div>
-                            <?php endwhile; ?>
+                            <?php endforeach; ?>
                             
                             <hr>
                             
@@ -203,11 +189,6 @@ ob_start();
 </div>
 
 <?php
-$content = ob_get_clean();
-include '../includes/layout.php';
-
-// Clear order success session after displaying
-unset($_SESSION['order_success']);
-unset($_SESSION['order_number']);
-unset($_SESSION['points_earned']);
+$dashboard_content = ob_get_clean();
+include '../includes/dashboard_layout.php';
 ?>

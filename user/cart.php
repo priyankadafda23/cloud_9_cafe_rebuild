@@ -1,37 +1,80 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
-// Check if user is logged in using cafe_user_id
-if (!isset($_SESSION['cafe_user_id'])) {
+// Check if user is logged in
+if (!$auth->isUserLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
 
-$user_id = $_SESSION['cafe_user_id'];
+$user_id = $auth->getUserId();
 
-// Get cart items from database
-$cart_query = "SELECT c.*, m.name, m.price, m.image 
-               FROM cafe_cart c 
-               JOIN menu_items m ON c.menu_item_id = m.id 
-               WHERE c.user_id = $user_id";
-$cart_result = mysqli_query($con, $cart_query);
+// Handle cart actions
+if (isset($_GET['remove_item'])) {
+    $item_id = intval($_GET['remove_item']);
+    $db->delete('cafe_cart', ['id' => $item_id, 'user_id' => $user_id]);
+    header("Location: cart.php");
+    exit();
+}
+
+if (isset($_GET['clear_cart'])) {
+    $db->delete('cafe_cart', ['user_id' => $user_id]);
+    header("Location: cart.php");
+    exit();
+}
+
+if (isset($_GET['update_qty']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $item_id = intval($_GET['update_qty']);
+    $quantity = intval($_POST['quantity']);
+    if ($quantity > 0) {
+        $db->update('cafe_cart', ['quantity' => $quantity], ['id' => $item_id, 'user_id' => $user_id]);
+    }
+    header("Location: cart.php");
+    exit();
+}
+
+// Handle add to cart from menu
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
+    $menu_item_id = intval($_POST['item_id']);
+    $quantity = intval($_POST['quantity'] ?? 1);
+    
+    // Check if item already in cart
+    $existing = $db->selectOne('cafe_cart', ['user_id' => $user_id, 'menu_item_id' => $menu_item_id]);
+    
+    if ($existing) {
+        $newQty = $existing['quantity'] + $quantity;
+        $db->update('cafe_cart', ['quantity' => $newQty], ['id' => $existing['id']]);
+    } else {
+        $db->insert('cafe_cart', [
+            'user_id' => $user_id,
+            'menu_item_id' => $menu_item_id,
+            'quantity' => $quantity,
+            'customization' => ''
+        ]);
+    }
+    header("Location: cart.php");
+    exit();
+}
+
+// Get cart items
 $cart_items = [];
+$cartData = $db->select('cafe_cart', ['user_id' => $user_id]);
+
 $total_amount = 0;
 $item_count = 0;
 
-while ($row = mysqli_fetch_assoc($cart_result)) {
-    $cart_items[] = $row;
-    $total_amount += $row['price'] * $row['quantity'];
-    $item_count += $row['quantity'];
+foreach ($cartData as $cartItem) {
+    $menuItem = $db->selectOne('menu_items', ['id' => $cartItem['menu_item_id']]);
+    if ($menuItem) {
+        $cart_items[] = array_merge($cartItem, $menuItem);
+        $total_amount += $menuItem['price'] * $cartItem['quantity'];
+        $item_count += $cartItem['quantity'];
+    }
 }
 
-// Get user addresses
-$address_query = "SELECT address FROM cafe_users WHERE id = $user_id";
-$address_result = mysqli_query($con, $address_query);
-$user_address = mysqli_fetch_assoc($address_result)['address'] ?? '';
+// Get user address
+$user = $db->selectOne('cafe_users', ['id' => $user_id]);
+$user_address = $user['address'] ?? '';
 
 $title = "Order Cart - Cloud 9 Cafe";
 ob_start();
@@ -237,7 +280,7 @@ ob_start();
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span>Tax (8%):</span>
-                            <span>$<?php echo number_format($total_amount * 0.08, 2); ?></span>
+                            <span>₹<?php echo number_format($total_amount * 0.08, 2); ?></span>
                         </div>
                         <hr class="my-2">
                         <div class="d-flex justify-content-between fw-bold">
@@ -264,30 +307,6 @@ ob_start();
 </div>
 
 <?php
-$content = ob_get_clean();
-include '../includes/layout.php';
-
-// Handle cart actions
-if (isset($_GET['remove_item'])) {
-    $item_id = intval($_GET['remove_item']);
-    mysqli_query($con, "DELETE FROM cafe_cart WHERE id = $item_id AND user_id = $user_id");
-    header("Location: cart.php");
-    exit();
-}
-
-if (isset($_GET['clear_cart'])) {
-    mysqli_query($con, "DELETE FROM cafe_cart WHERE user_id = $user_id");
-    header("Location: cart.php");
-    exit();
-}
-
-if (isset($_GET['update_qty']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    $item_id = intval($_GET['update_qty']);
-    $quantity = intval($_POST['quantity']);
-    if ($quantity > 0) {
-        mysqli_query($con, "UPDATE cafe_cart SET quantity = $quantity WHERE id = $item_id AND user_id = $user_id");
-    }
-    header("Location: cart.php");
-    exit();
-}
+$dashboard_content = ob_get_clean();
+include '../includes/dashboard_layout.php';
 ?>

@@ -1,22 +1,23 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
-if (!isset($_SESSION['cafe_admin_id'])) {
+if (!$auth->isAdminLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
+$admin_id = $auth->getAdminId();
+$admin_name = $auth->getUserName() ?? 'Admin';
+$admin_role = $auth->getAdminRole();
 
 // Handle status toggle
 if (isset($_GET['toggle']) && is_numeric($_GET['toggle'])) {
     $user_id = intval($_GET['toggle']);
-    $current_status = mysqli_query($con, "SELECT status FROM cafe_users WHERE id = $user_id");
-    $status = mysqli_fetch_assoc($current_status)['status'];
-    $new_status = ($status == 'Active') ? 'Inactive' : 'Active';
-    mysqli_query($con, "UPDATE cafe_users SET status = '$new_status' WHERE id = $user_id");
+    $user = $db->selectOne('cafe_users', ['id' => $user_id]);
+    if ($user) {
+        $new_status = ($user['status'] == 'Active') ? 'Inactive' : 'Active';
+        $db->update('cafe_users', ['status' => $new_status], ['id' => $user_id]);
+    }
     header("Location: users.php");
     exit();
 }
@@ -24,7 +25,7 @@ if (isset($_GET['toggle']) && is_numeric($_GET['toggle'])) {
 // Handle delete
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $user_id = intval($_GET['delete']);
-    mysqli_query($con, "DELETE FROM cafe_users WHERE id = $user_id");
+    $db->delete('cafe_users', ['id' => $user_id]);
     header("Location: users.php");
     exit();
 }
@@ -35,19 +36,25 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 // Search
-$search = isset($_GET['search']) ? mysqli_real_escape_string($con, $_GET['search']) : '';
-$where = '';
+$search = $_GET['search'] ?? '';
+
+// Get all users
+$allUsers = $db->select('cafe_users', [], ['created_at' => 'DESC']);
+
+// Filter by search
 if ($search) {
-    $where = "WHERE fullname LIKE '%$search%' OR email LIKE '%$search%' OR mobile LIKE '%$search%'";
+    $allUsers = array_filter($allUsers, function($u) use ($search) {
+        return stripos($u['fullname'], $search) !== false || 
+               stripos($u['email'], $search) !== false ||
+               stripos($u['mobile'] ?? '', $search) !== false;
+    });
 }
 
-// Get total count
-$count_result = mysqli_query($con, "SELECT COUNT(*) as count FROM cafe_users $where");
-$total_users = mysqli_fetch_assoc($count_result)['count'];
+$total_users = count($allUsers);
 $total_pages = ceil($total_users / $limit);
 
-// Get users
-$users = mysqli_query($con, "SELECT * FROM cafe_users $where ORDER BY created_at DESC LIMIT $limit OFFSET $offset");
+// Get paginated users
+$users = array_slice($allUsers, $offset, $limit);
 
 $title = "Users - Cloud 9 Cafe";
 $page_title = "User Management";
@@ -107,7 +114,7 @@ ob_start();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (mysqli_num_rows($users) === 0): ?>
+                    <?php if (empty($users)): ?>
                     <tr>
                         <td colspan="6" class="text-center py-5">
                             <i class="fas fa-users fa-3x text-muted mb-3"></i>
@@ -115,13 +122,13 @@ ob_start();
                         </td>
                     </tr>
                     <?php else: ?>
-                    <?php while ($user = mysqli_fetch_assoc($users)): ?>
+                    <?php foreach ($users as $user): ?>
                     <tr>
                         <td class="ps-4">
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
                                     <?php if ($user['profile_picture']): ?>
-                                    <img src="../assets/images/profile_pictures/<?php echo $user['profile_picture']; ?>" alt="" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                    <img src="../<?php echo $user['profile_picture']; ?>" alt="" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
                                     <?php else: ?>
                                     <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                         <i class="fas fa-user text-primary"></i>
@@ -163,7 +170,7 @@ ob_start();
                             </a>
                         </td>
                     </tr>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
             </table>

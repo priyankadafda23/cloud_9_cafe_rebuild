@@ -1,272 +1,238 @@
 <?php
-// Only start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+/**
+ * =============================================================================
+ * CLOUD 9 CAFE - PUBLIC LAYOUT FILE
+ * =============================================================================
+ * 
+ * ROLE: This is the main layout wrapper for all PUBLIC pages of the website.
+ *       It provides the common HTML structure including navbar, footer, and
+ *       shared CSS/JS resources. Content pages include this file and pass
+ *       their content via the $content variable.
+ * 
+ * USED BY: All pages in /pages/ folder and /auth/ folder
+ * 
+ * FLOW: 1. Includes database config
+ *       2. Fetches user data if logged in
+ *       3. Outputs HTML with navbar and footer
+ *       4. Injects page content via $content variable
+ */
+
+// =============================================================================
+// SECTION: Database & Authentication Setup
+// DESCRIPTION: Includes the database configuration file which initializes
+//              the JsonDB connection and TokenAuth system for cookie-based auth
+// =============================================================================
 include_once(__DIR__ . "/../config/db_config.php");
 
-// Fetch current user data if logged in
-$current_user_data = null;
-if (isset($_SESSION['cafe_user_id'])) {
-    $uid = $_SESSION['cafe_user_id'];
-    $user_result = mysqli_query($con, "SELECT * FROM cafe_users WHERE id = $uid");
-    $current_user_data = mysqli_fetch_assoc($user_result);
+// =============================================================================
+// SECTION: User Session Data Fetching
+// DESCRIPTION: If user is logged in via cookie auth, fetch their profile data
+//              and calculate their cart item count for display in navbar
+// =============================================================================
+$current_user_data = null;  // Stores logged-in user's profile data
+$cart_count = 0;            // Stores total items in user's cart
+
+// Check if user is logged in using cookie-based auth
+if ($auth->isUserLoggedIn()) {
+    $uid = $auth->getUserId();  // Get user ID from auth cookie
+    
+    // Fetch user profile from database
+    $current_user_data = $db->selectOne('cafe_users', ['id' => $uid]);
+    
+    // Get cart item count for navbar badge
+    $cartItems = $db->select('cafe_cart', ['user_id' => $uid]);
+    foreach ($cartItems as $item) {
+        $cart_count += $item['quantity'];
+    }
 }
+// =============================================================================
+// END SECTION: User Session Data Fetching
+// =============================================================================
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Dynamic page title - set by each page via $title variable -->
     <title><?php echo isset($title) ? $title : 'Cloud 9 Cafe'; ?></title>
     
-    <!-- Google Fonts - Poppins -->
+    <!-- Google Fonts - Poppins font family for modern look -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Bootstrap 5 CSS -->
+    <!-- Bootstrap 5 CSS - Frontend framework for responsive design -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- FontAwesome -->
+    <!-- FontAwesome - Icon library for UI icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
-    <!-- Theme CSS -->
+    <!-- Theme CSS - Global theme variables and base styles (colors, spacing, etc.) -->
     <link rel="stylesheet" href="/cloud_9_cafe_rebuild/assets/css/theme.css">
     
-    <style>
-        /* Additional layout-specific styles */
-        body {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        main {
-            flex: 1;
-        }
-        
-        /* Navbar Avatar */
-        .nav-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--cafe-accent);
-        }
-        
-        /* Cart Badge */
-        .cart-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--cafe-accent);
-            color: var(--cafe-primary-dark);
-            font-size: 0.65rem;
-            font-weight: 700;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        /* Mobile menu button */
-        .navbar-toggler {
-            border: none;
-            padding: 0.5rem;
-        }
-        
-        .navbar-toggler:focus {
-            box-shadow: none;
-        }
-        
-        /* Active link indicator */
-        .nav-link {
-            position: relative;
-        }
-        
-        .nav-link::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 2px;
-            background: var(--cafe-primary);
-            transition: all 0.3s ease;
-            transform: translateX(-50%);
-        }
-        
-        .nav-link:hover::after,
-        .nav-link.active::after {
-            width: 60%;
-        }
-        
-        /* Dropdown styling */
-        .dropdown-menu {
-            border: none;
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-lg);
-            padding: 0.5rem;
-        }
-        
-        .dropdown-item {
-            border-radius: var(--radius-md);
-            padding: 0.75rem 1rem;
-            font-weight: 500;
-        }
-        
-        .dropdown-item:hover {
-            background: rgba(107, 79, 75, 0.05);
-            color: var(--cafe-primary);
-        }
-        
-        /* Footer styling */
-        .main-footer {
-            background: var(--bg-dark);
-            color: rgba(255, 255, 255, 0.7);
-            padding: 4rem 0 2rem;
-        }
-        
-        .main-footer a {
-            color: rgba(255, 255, 255, 0.7);
-            transition: color 0.3s ease;
-        }
-        
-        .main-footer a:hover {
-            color: var(--cafe-accent);
-        }
-        
-        .footer-brand {
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: white !important;
-        }
-        
-        .footer-title {
-            color: white;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            font-size: 1.1rem;
-        }
-        
-        .social-links {
-            display: flex;
-            gap: 0.75rem;
-        }
-        
-        .social-links a {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        .social-links a:hover {
-            background: var(--cafe-accent);
-            color: var(--cafe-primary-dark);
-            transform: translateY(-3px);
-        }
-    </style>
+    <!-- Layout CSS - Public layout specific styles (navbar, footer, components) -->
+    <link rel="stylesheet" href="/cloud_9_cafe_rebuild/assets/css/layout/layout.css">
 </head>
 <body>
-    <!-- Navigation -->
+
+    <!-- ========================================================================= -->
+    <!-- SECTION: Navigation Bar (Navbar) -->
+    <!-- DESCRIPTION: Fixed top navigation with logo, menu links, and user actions -->
+    <!--              Shows different options based on login status -->
+    <!-- ========================================================================= -->
     <nav class="navbar navbar-expand-lg fixed-top">
         <div class="container">
+            
+            <!-- Logo - Click redirects to: /cloud_9_cafe_rebuild/pages/index.php (Homepage) -->
             <a class="navbar-brand" href="/cloud_9_cafe_rebuild/pages/index.php">
                 <i class="fas fa-mug-hot"></i>
                 Cloud 9 Cafe
             </a>
             
+            <!-- Mobile Menu Toggle Button - Shows on screens smaller than LG breakpoint -->
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
                 <i class="fas fa-bars text-primary"></i>
             </button>
             
+            <!-- Navbar Links Container - Collapses on mobile -->
             <div class="collapse navbar-collapse" id="mainNav">
+                
+                <!-- Center Navigation Links -->
                 <ul class="navbar-nav mx-auto align-items-center">
+                    
+                    <!-- Home Link - Click redirects to: index.php -->
+                    <!-- Active state: Highlights when user is on index.php -->
                     <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>" href="/cloud_9_cafe_rebuild/pages/index.php">
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'index.php' ? 'active' : ''; ?>" 
+                           href="/cloud_9_cafe_rebuild/pages/index.php">
                             <i class="fas fa-home me-1 d-lg-none"></i>Home
                         </a>
                     </li>
+                    
+                    <!-- Menu Link - Click redirects to: menu/menu.php -->
+                    <!-- Active state: Highlights when URL contains 'menu' -->
                     <li class="nav-item">
-                        <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], 'menu') !== false ? 'active' : ''; ?>" href="/cloud_9_cafe_rebuild/pages/menu/menu.php">
+                        <a class="nav-link <?php echo strpos($_SERVER['PHP_SELF'], 'menu') !== false ? 'active' : ''; ?>" 
+                           href="/cloud_9_cafe_rebuild/pages/menu/menu.php">
                             <i class="fas fa-coffee me-1 d-lg-none"></i>Menu
                         </a>
                     </li>
+                    
+                    <!-- About Link - Click redirects to: about.php -->
                     <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'about.php' ? 'active' : ''; ?>" href="/cloud_9_cafe_rebuild/pages/about.php">
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'about.php' ? 'active' : ''; ?>" 
+                           href="/cloud_9_cafe_rebuild/pages/about.php">
                             <i class="fas fa-info-circle me-1 d-lg-none"></i>About
                         </a>
                     </li>
+                    
+                    <!-- Contact Link - Click redirects to: contact.php -->
                     <li class="nav-item">
-                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'contact.php' ? 'active' : ''; ?>" href="/cloud_9_cafe_rebuild/pages/contact.php">
+                        <a class="nav-link <?php echo basename($_SERVER['PHP_SELF']) == 'contact.php' ? 'active' : ''; ?>" 
+                           href="/cloud_9_cafe_rebuild/pages/contact.php">
                             <i class="fas fa-envelope me-1 d-lg-none"></i>Contact
                         </a>
                     </li>
                 </ul>
                 
+                <!-- Right Side: User Actions (Cart, Profile or Login/Register) -->
                 <ul class="navbar-nav align-items-center">
-                    <?php if (isset($_SESSION['cafe_user_id'])): ?>
-                        <!-- Cart Icon -->
+                    <?php 
+                    // =====================================================================
+                    // CONDITION: Check if user is logged in
+                    // If YES: Show Cart icon and User dropdown menu
+                    // If NO:  Show Login and Register buttons
+                    // =====================================================================
+                    if ($auth->isUserLoggedIn()): 
+                    ?>
+                        <!-- Cart Icon with Badge - Click redirects to: user/cart.php -->
                         <li class="nav-item me-3">
                             <a class="nav-link position-relative" href="/cloud_9_cafe_rebuild/user/cart.php">
                                 <i class="fas fa-shopping-cart"></i>
-                                <span class="cart-badge">0</span>
+                                <!-- Cart count badge - Updates dynamically via JavaScript -->
+                                <span class="cart-badge" id="navbarCartCount"><?php echo $cart_count; ?></span>
                             </a>
                         </li>
                         
-                        <!-- User Dropdown -->
+                        <!-- User Dropdown Menu - Shows profile, orders, logout -->
                         <li class="nav-item dropdown">
+                            <!-- Toggle dropdown on click -->
                             <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+                                <!-- User avatar - Shows default if no profile picture -->
                                 <img src="<?php echo ($current_user_data && $current_user_data['profile_picture']) ? '/' . $current_user_data['profile_picture'] : '/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'; ?>" 
-                                     alt="Profile" class="nav-avatar" onerror="this.src='/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'">
+                                     alt="Profile" class="nav-avatar" 
+                                     onerror="this.src='/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'">
                                 <span class="d-none d-lg-inline fw-medium"><?php echo htmlspecialchars($current_user_data['fullname'] ?? 'User'); ?></span>
                             </a>
+                            <!-- Dropdown menu items -->
                             <ul class="dropdown-menu dropdown-menu-end">
+                                <!-- Dashboard - Click redirects to: user/dashboard.php -->
                                 <li><a class="dropdown-item" href="/cloud_9_cafe_rebuild/user/dashboard.php"><i class="fas fa-th-large me-2 text-primary"></i>Dashboard</a></li>
+                                <!-- Profile - Click redirects to: user/profile.php -->
                                 <li><a class="dropdown-item" href="/cloud_9_cafe_rebuild/user/profile.php"><i class="fas fa-user me-2 text-primary"></i>Profile</a></li>
+                                <!-- Orders - Click redirects to: user/orders.php -->
                                 <li><a class="dropdown-item" href="/cloud_9_cafe_rebuild/user/orders.php"><i class="fas fa-shopping-bag me-2 text-primary"></i>My Orders</a></li>
                                 <li><hr class="dropdown-divider"></li>
+                                <!-- Logout - Click redirects to: auth/logout.php (clears auth cookie) -->
                                 <li><a class="dropdown-item text-danger" href="/cloud_9_cafe_rebuild/auth/logout.php"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                             </ul>
                         </li>
                     <?php else: ?>
+                        <!-- Not Logged In: Show Login and Register buttons -->
+                        <!-- Login Button - Click redirects to: auth/login.php -->
                         <li class="nav-item">
                             <a class="btn btn-outline-primary me-2" href="/cloud_9_cafe_rebuild/auth/login.php">Login</a>
                         </li>
+                        <!-- Register Button - Click redirects to: auth/register.php -->
                         <li class="nav-item">
                             <a class="btn btn-primary" href="/cloud_9_cafe_rebuild/auth/register.php">Register</a>
                         </li>
                     <?php endif; ?>
                 </ul>
+                <!-- END: User Actions -->
             </div>
         </div>
     </nav>
+    <!-- ========================================================================= -->
+    <!-- END SECTION: Navigation Bar (Navbar) -->
+    <!-- ========================================================================= -->
 
-    <!-- Spacer for fixed navbar -->
+    <!-- Spacer for fixed navbar - Prevents content from being hidden under navbar -->
     <div style="height: var(--navbar-height);"></div>
 
-    <!-- Main Content -->
+    <!-- ========================================================================= -->
+    <!-- SECTION: Main Content Area -->
+    <!-- DESCRIPTION: This is where page-specific content is injected -->
+    <!--              Each page sets $content variable before including this layout -->
+    <!-- ========================================================================= -->
     <main>
-        <?php echo $content; ?>
+        <?php 
+        // Echo the page content passed from the including file
+        echo $content; 
+        ?>
     </main>
+    <!-- ========================================================================= -->
+    <!-- END SECTION: Main Content Area -->
+    <!-- ========================================================================= -->
 
-    <!-- Footer -->
+    <!-- ========================================================================= -->
+    <!-- SECTION: Footer -->
+    <!-- DESCRIPTION: Site footer with logo, quick links, support links, and contact info -->
+    <!-- ========================================================================= -->
     <footer class="main-footer">
         <div class="container">
             <div class="row g-4">
+                
+                <!-- Column 1: Brand Info & Social Links -->
                 <div class="col-lg-4">
+                    <!-- Footer Logo - Click redirects to: index.php (Homepage) -->
                     <a href="/cloud_9_cafe_rebuild/pages/index.php" class="footer-brand text-decoration-none">
                         <i class="fas fa-mug-hot me-2"></i>Cloud 9 Cafe
                     </a>
                     <p class="mt-3 mb-4">Your perfect destination for premium coffee, delicious snacks, and delightful desserts. Experience the taste of perfection.</p>
+                    <!-- Social Media Links -->
                     <div class="social-links">
                         <a href="#"><i class="fab fa-facebook-f"></i></a>
                         <a href="#"><i class="fab fa-instagram"></i></a>
@@ -274,23 +240,36 @@ if (isset($_SESSION['cafe_user_id'])) {
                         <a href="#"><i class="fab fa-youtube"></i></a>
                     </div>
                 </div>
+                
+                <!-- Column 2: Quick Links -->
                 <div class="col-lg-2 col-md-4">
                     <h5 class="footer-title">Quick Links</h5>
                     <ul class="list-unstyled">
+                        <!-- Home - Click redirects to: index.php -->
                         <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/index.php">Home</a></li>
+                        <!-- Menu - Click redirects to: menu/menu.php -->
                         <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/menu/menu.php">Menu</a></li>
+                        <!-- About Us - Click redirects to: about.php -->
                         <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/about.php">About Us</a></li>
                     </ul>
                 </div>
+                
+                <!-- Column 3: Support Links -->
                 <div class="col-lg-2 col-md-4">
                     <h5 class="footer-title">Support</h5>
                     <ul class="list-unstyled">
+                        <!-- Contact - Click redirects to: contact.php -->
                         <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/contact.php">Contact</a></li>
+                        <!-- FAQ - Click redirects to: faq.php -->
                         <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/faq.php">FAQ</a></li>
+                        <!-- Privacy Policy - Click redirects to: privacy_policy.php -->
                         <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/privacy_policy.php">Privacy Policy</a></li>
+                        <!-- Terms - Click redirects to: terms_of_service.php -->
                         <li class="mb-2"><a href="/cloud_9_cafe_rebuild/pages/terms_of_service.php">Terms</a></li>
                     </ul>
                 </div>
+                
+                <!-- Column 4: Contact Information -->
                 <div class="col-lg-4 col-md-4">
                     <h5 class="footer-title">Contact Us</h5>
                     <ul class="list-unstyled">
@@ -301,6 +280,8 @@ if (isset($_SESSION['cafe_user_id'])) {
                     </ul>
                 </div>
             </div>
+            
+            <!-- Footer Bottom: Copyright -->
             <hr class="my-4" style="border-color: rgba(255,255,255,0.1);">
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start">
@@ -312,14 +293,17 @@ if (isset($_SESSION['cafe_user_id'])) {
             </div>
         </div>
     </footer>
+    <!-- ========================================================================= -->
+    <!-- END SECTION: Footer -->
+    <!-- ========================================================================= -->
 
-    <!-- Toast Container -->
+    <!-- Toast Container - For displaying notification messages -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Bootstrap JS -->
+    <!-- Bootstrap JS - Required for navbar toggle, dropdowns, modals -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Theme JS -->
+    <!-- Theme JS - Custom JavaScript for theme functionality -->
     <script src="/cloud_9_cafe_rebuild/assets/js/theme.js"></script>
 </body>
 </html>

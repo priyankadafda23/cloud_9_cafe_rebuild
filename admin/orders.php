@@ -1,20 +1,20 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if admin is logged in
-if (!isset($_SESSION['cafe_admin_id'])) {
+if (!$auth->isAdminLoggedIn()) {
     header("Location: ../auth/login.php");
     exit();
 }
+$admin_id = $auth->getAdminId();
+$admin_name = $auth->getUserName() ?? 'Admin';
+$admin_role = $auth->getAdminRole();
 
 // Handle status update
 if (isset($_POST['update_status']) && isset($_POST['order_id']) && isset($_POST['status'])) {
     $order_id = intval($_POST['order_id']);
-    $status = mysqli_real_escape_string($con, $_POST['status']);
-    mysqli_query($con, "UPDATE cafe_orders SET status = '$status' WHERE id = $order_id");
+    $status = $_POST['status'];
+    $db->update('cafe_orders', ['status' => $status], ['id' => $order_id]);
     header("Location: orders.php");
     exit();
 }
@@ -22,8 +22,8 @@ if (isset($_POST['update_status']) && isset($_POST['order_id']) && isset($_POST[
 // Handle payment status update
 if (isset($_POST['update_payment']) && isset($_POST['order_id']) && isset($_POST['payment_status'])) {
     $order_id = intval($_POST['order_id']);
-    $payment_status = mysqli_real_escape_string($con, $_POST['payment_status']);
-    mysqli_query($con, "UPDATE cafe_orders SET payment_status = '$payment_status' WHERE id = $order_id");
+    $payment_status = $_POST['payment_status'];
+    $db->update('cafe_orders', ['payment_status' => $payment_status], ['id' => $order_id]);
     header("Location: orders.php");
     exit();
 }
@@ -34,30 +34,33 @@ $limit = 10;
 $offset = ($page - 1) * $limit;
 
 // Filters
-$status_filter = isset($_GET['status']) ? mysqli_real_escape_string($con, $_GET['status']) : '';
-$search = isset($_GET['search']) ? mysqli_real_escape_string($con, $_GET['search']) : '';
+$status_filter = $_GET['status'] ?? '';
+$search = $_GET['search'] ?? '';
 
-$where = [];
+// Get all orders with user info
+$allOrders = $db->select('cafe_orders', [], ['order_date' => 'DESC']);
+
+// Filter by status
 if ($status_filter) {
-    $where[] = "o.status = '$status_filter'";
+    $allOrders = array_filter($allOrders, function($o) use ($status_filter) {
+        return $o['status'] === $status_filter;
+    });
 }
-if ($search) {
-    $where[] = "(o.order_number LIKE '%$search%' OR u.fullname LIKE '%$search%')";
-}
-$where_sql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
-// Get total count
-$count_result = mysqli_query($con, "SELECT COUNT(*) as count FROM cafe_orders o JOIN cafe_users u ON o.user_id = u.id $where_sql");
-$total_orders = mysqli_fetch_assoc($count_result)['count'];
+// Filter by search (order number or customer name)
+if ($search) {
+    $allOrders = array_filter($allOrders, function($o) use ($search, $db) {
+        $user = $db->selectOne('cafe_users', ['id' => $o['user_id']]);
+        return stripos($o['order_number'], $search) !== false || 
+               ($user && stripos($user['fullname'], $search) !== false);
+    });
+}
+
+$total_orders = count($allOrders);
 $total_pages = ceil($total_orders / $limit);
 
-// Get orders
-$orders = mysqli_query($con, "SELECT o.*, u.fullname as user_name, u.email as user_email 
-                              FROM cafe_orders o 
-                              JOIN cafe_users u ON o.user_id = u.id 
-                              $where_sql 
-                              ORDER BY o.order_date DESC 
-                              LIMIT $limit OFFSET $offset");
+// Get paginated orders
+$orders = array_slice($allOrders, $offset, $limit);
 
 $title = "Orders - Cloud 9 Cafe";
 $page_title = "Order Management";
@@ -129,7 +132,7 @@ ob_start();
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (mysqli_num_rows($orders) === 0): ?>
+                    <?php if (empty($orders)): ?>
                     <tr>
                         <td colspan="7" class="text-center py-5">
                             <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
@@ -137,13 +140,15 @@ ob_start();
                         </td>
                     </tr>
                     <?php else: ?>
-                    <?php while ($order = mysqli_fetch_assoc($orders)): ?>
+                    <?php foreach ($orders as $order): 
+                        $user = $db->selectOne('cafe_users', ['id' => $order['user_id']]);
+                    ?>
                     <tr>
                         <td class="ps-4 fw-medium"><?php echo htmlspecialchars($order['order_number']); ?></td>
                         <td>
                             <div>
-                                <div class="fw-medium"><?php echo htmlspecialchars($order['user_name']); ?></div>
-                                <small class="text-muted"><?php echo htmlspecialchars($order['user_email']); ?></small>
+                                <div class="fw-medium"><?php echo htmlspecialchars($user['fullname'] ?? 'Unknown'); ?></div>
+                                <small class="text-muted"><?php echo htmlspecialchars($user['email'] ?? ''); ?></small>
                             </div>
                         </td>
                         <td>
@@ -182,7 +187,7 @@ ob_start();
                             </a>
                         </td>
                     </tr>
-                    <?php endwhile; ?>
+                    <?php endforeach; ?>
                     <?php endif; ?>
                 </tbody>
             </table>

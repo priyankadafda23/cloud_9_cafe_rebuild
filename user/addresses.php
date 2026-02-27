@@ -1,34 +1,41 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
 require_once '../config/db_config.php';
 
 // Check if user is logged in
-if (!isset($_SESSION['cafe_user_id'])) {
+if (!$auth->isUserLoggedIn()) {
     header("Location: login.php");
     exit();
 }
 
-$user_id = $_SESSION['cafe_user_id'];
+$user_id = $auth->getUserId();
 $success = '';
 $error = '';
 
 // Handle Add Address
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_address'])) {
-    $fullname = mysqli_real_escape_string($con, $_POST['fullname']);
-    $phone = mysqli_real_escape_string($con, $_POST['phone']);
-    $address_line1 = mysqli_real_escape_string($con, $_POST['address_line1']);
-    $address_line2 = mysqli_real_escape_string($con, $_POST['address_line2']);
-    $city = mysqli_real_escape_string($con, $_POST['city']);
-    $state = mysqli_real_escape_string($con, $_POST['state']);
-    $zip_code = mysqli_real_escape_string($con, $_POST['zip_code']);
-    $address_type = mysqli_real_escape_string($con, $_POST['address_type']);
+    $fullname = $_POST['fullname'] ?? '';
+    $phone = $_POST['phone'] ?? '';
+    $address_line1 = $_POST['address_line1'] ?? '';
+    $address_line2 = $_POST['address_line2'] ?? '';
+    $city = $_POST['city'] ?? '';
+    $state = $_POST['state'] ?? '';
+    $zip_code = $_POST['zip_code'] ?? '';
+    $address_type = $_POST['address_type'] ?? 'Home';
     
-    $insert_query = "INSERT INTO user_addresses (user_id, fullname, phone, address_line1, address_line2, city, state, zip_code, address_type) 
-                     VALUES ($user_id, '$fullname', '$phone', '$address_line1', '$address_line2', '$city', '$state', '$zip_code', '$address_type')";
+    $addressData = [
+        'user_id' => $user_id,
+        'fullname' => $fullname,
+        'phone' => $phone,
+        'address_line1' => $address_line1,
+        'address_line2' => $address_line2,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zip_code,
+        'address_type' => $address_type
+    ];
     
-    if (mysqli_query($con, $insert_query)) {
+    $newId = $db->insert('user_addresses', $addressData);
+    if ($newId) {
         $success = 'Address added successfully!';
     } else {
         $error = 'Failed to add address. Please try again.';
@@ -38,22 +45,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['add_address'])) {
 // Handle Edit Address
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_address'])) {
     $address_id = intval($_POST['address_id']);
-    $fullname = mysqli_real_escape_string($con, $_POST['fullname']);
-    $phone = mysqli_real_escape_string($con, $_POST['phone']);
-    $address_line1 = mysqli_real_escape_string($con, $_POST['address_line1']);
-    $address_line2 = mysqli_real_escape_string($con, $_POST['address_line2']);
-    $city = mysqli_real_escape_string($con, $_POST['city']);
-    $state = mysqli_real_escape_string($con, $_POST['state']);
-    $zip_code = mysqli_real_escape_string($con, $_POST['zip_code']);
-    $address_type = mysqli_real_escape_string($con, $_POST['address_type']);
+    $fullname = $_POST['fullname'] ?? '';
+    $phone = $_POST['phone'] ?? '';
+    $address_line1 = $_POST['address_line1'] ?? '';
+    $address_line2 = $_POST['address_line2'] ?? '';
+    $city = $_POST['city'] ?? '';
+    $state = $_POST['state'] ?? '';
+    $zip_code = $_POST['zip_code'] ?? '';
+    $address_type = $_POST['address_type'] ?? 'Home';
     
-    $update_query = "UPDATE user_addresses SET 
-                     fullname = '$fullname', phone = '$phone', address_line1 = '$address_line1', 
-                     address_line2 = '$address_line2', city = '$city', state = '$state', 
-                     zip_code = '$zip_code', address_type = '$address_type'
-                     WHERE id = $address_id AND user_id = $user_id";
+    $updateData = [
+        'fullname' => $fullname,
+        'phone' => $phone,
+        'address_line1' => $address_line1,
+        'address_line2' => $address_line2,
+        'city' => $city,
+        'state' => $state,
+        'zip_code' => $zip_code,
+        'address_type' => $address_type
+    ];
     
-    if (mysqli_query($con, $update_query)) {
+    $updated = $db->update('user_addresses', $updateData, ['id' => $address_id, 'user_id' => $user_id]);
+    
+    if ($updated) {
         $success = 'Address updated successfully!';
     } else {
         $error = 'Failed to update address. Please try again.';
@@ -63,19 +77,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit_address'])) {
 // Handle Delete Address
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
     $address_id = intval($_GET['delete']);
-    mysqli_query($con, "DELETE FROM user_addresses WHERE id = $address_id AND user_id = $user_id");
+    $db->delete('user_addresses', ['id' => $address_id, 'user_id' => $user_id]);
     $success = 'Address deleted successfully!';
 }
 
 // Get all addresses for this user
-$addresses = mysqli_query($con, "SELECT * FROM user_addresses WHERE user_id = $user_id ORDER BY created_at DESC");
+$addresses = $db->select('user_addresses', ['user_id' => $user_id], ['created_at' => 'DESC']);
 
 // Get address to edit (if edit parameter is set)
 $edit_address = null;
 if (isset($_GET['edit']) && is_numeric($_GET['edit'])) {
     $edit_id = intval($_GET['edit']);
-    $edit_result = mysqli_query($con, "SELECT * FROM user_addresses WHERE id = $edit_id AND user_id = $user_id");
-    $edit_address = mysqli_fetch_assoc($edit_result);
+    $edit_address = $db->selectOne('user_addresses', ['id' => $edit_id, 'user_id' => $user_id]);
 }
 
 $title = "Saved Addresses - Cloud 9 Cafe";
@@ -118,7 +131,7 @@ ob_start();
             </button>
         </div>
 
-        <?php if (mysqli_num_rows($addresses) == 0): ?>
+        <?php if (empty($addresses)): ?>
         <div class="text-center py-5">
             <i class="fas fa-map-marker-alt fa-3x text-muted mb-3"></i>
             <h5>No addresses found</h5>
@@ -129,7 +142,7 @@ ob_start();
         </div>
         <?php else: ?>
         <div class="row g-4">
-            <?php while ($address = mysqli_fetch_assoc($addresses)): ?>
+            <?php foreach ($addresses as $address): ?>
             <div class="col-md-6">
                 <div class="card h-100 border-0 shadow-sm address-card">
                     <div class="card-body p-4">
@@ -164,7 +177,7 @@ ob_start();
                         <p class="text-muted mb-1"><?php echo htmlspecialchars($address['address_line2']); ?></p>
                         <?php endif; ?>
                         <p class="text-muted mb-1"><?php echo htmlspecialchars($address['city'] . ', ' . $address['state'] . ' ' . $address['zip_code']); ?></p>
-                        <p class="text-muted mb-3"><?php echo htmlspecialchars($address['country']); ?></p>
+                        <p class="text-muted mb-3"><?php echo htmlspecialchars($address['country'] ?? 'India'); ?></p>
                         <p class="mb-0"><i class="fas fa-phone me-2 text-muted"></i><?php echo htmlspecialchars($address['phone']); ?></p>
                     </div>
                 </div>
@@ -238,7 +251,7 @@ ob_start();
                     </div>
                 </div>
             </div>
-            <?php endwhile; ?>
+            <?php endforeach; ?>
         </div>
         <?php endif; ?>
     </div>

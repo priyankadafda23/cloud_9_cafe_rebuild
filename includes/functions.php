@@ -8,7 +8,8 @@
  * @return bool
  */
 function isLoggedIn() {
-    return isset($_SESSION['cafe_user_id']);
+    global $auth;
+    return $auth->isUserLoggedIn();
 }
 
 /**
@@ -16,7 +17,8 @@ function isLoggedIn() {
  * @return int|null
  */
 function getCurrentUserId() {
-    return $_SESSION['cafe_user_id'] ?? null;
+    global $auth;
+    return $auth->getUserId();
 }
 
 /**
@@ -24,17 +26,16 @@ function getCurrentUserId() {
  * @return string|null
  */
 function getCurrentUserName() {
-    return $_SESSION['cafe_user_name'] ?? null;
+    global $auth;
+    return $auth->getUserName();
 }
 
 /**
  * Redirect to login page if not logged in
  */
 function requireLogin() {
-    if (!isLoggedIn()) {
-        header("Location: ../auth/login.php");
-        exit();
-    }
+    global $auth;
+    $auth->requireUser();
 }
 
 /**
@@ -64,30 +65,5 @@ function sanitize($data) {
     $data = stripslashes($data);
     $data = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
     return $data;
-}
-
-/**
- * Display flash message
- * @param string $type (success, error, warning, info)
- * @param string $message
- */
-function setFlashMessage($type, $message) {
-    $_SESSION['flash_message'] = [
-        'type' => $type,
-        'message' => $message
-    ];
-}
-
-/**
- * Get and clear flash message
- * @return array|null
- */
-function getFlashMessage() {
-    if (isset($_SESSION['flash_message'])) {
-        $message = $_SESSION['flash_message'];
-        unset($_SESSION['flash_message']);
-        return $message;
-    }
-    return null;
 }
 ?>
