@@ -33,6 +33,9 @@ include_once '../config/db_config.php';
 // DESCRIPTION: Process login form submission when user clicks "Login" button
 // =============================================================================
 
+// Get redirect URL if provided (for redirecting back after login)
+$redirectUrl = isset($_GET['redirect']) ? $_GET['redirect'] : '';
+
 // Check if login button was clicked (form submitted via POST)
 // FUNCTION: isset() - Checks if variable exists and is not NULL
 if (isset($_POST['login_btn'])) {
@@ -41,6 +44,9 @@ if (isset($_POST['login_btn'])) {
     // FUNCTION: $_POST[] - Superglobal array for HTTP POST data
     $email = $_POST['email'];      // User's email address
     $password = $_POST['password']; // User's password (plain text in demo)
+    
+    // Get redirect URL from form (if any)
+    $redirectAfterLogin = $_POST['redirect_url'] ?? '';
     
     // -------------------------------------------------------------------------
     // STEP 1: Check if it's an ADMIN login (cafe_admins table)
@@ -59,9 +65,12 @@ if (isset($_POST['login_btn'])) {
         // FUNCTION: $db->update() - Updates record in database
         $db->update('cafe_admins', ['last_login' => date('Y-m-d H:i:s')], ['id' => $admin['id']]);
         
-        // Redirect to admin dashboard
-        // FUNCTION: header() - Sends HTTP header for redirection
-        header("Location: ../admin/dashboard.php");
+        // Redirect to admin dashboard or specified URL
+        if ($redirectAfterLogin && filter_var($redirectAfterLogin, FILTER_VALIDATE_URL)) {
+            header("Location: " . $redirectAfterLogin);
+        } else {
+            header("Location: ../admin/dashboard.php");
+        }
         exit();  // Stop script execution
     }
     
@@ -76,8 +85,12 @@ if (isset($_POST['login_btn'])) {
         // PARAMETERS: user_id, fullname, role (defaults to 'User')
         $auth->loginUser($user['id'], $user['fullname'], $user['role'] ?? 'User');
         
-        // Redirect to user dashboard
-        header("Location: ../user/dashboard.php");
+        // Redirect to specified URL or user dashboard
+        if ($redirectAfterLogin && filter_var($redirectAfterLogin, FILTER_VALIDATE_URL)) {
+            header("Location: " . $redirectAfterLogin);
+        } else {
+            header("Location: ../user/dashboard.php");
+        }
         exit();
     } else {
         // No match found - Invalid credentials
@@ -150,7 +163,12 @@ ob_start();
 
                     <!-- Login Form -->
                     <!-- FORM ACTION: Submits to this same file (login.php) via POST method -->
-                    <form action="login.php" method="POST" id="loginForm">
+                    <form action="login.php<?php echo $redirectUrl ? '?redirect=' . urlencode($redirectUrl) : ''; ?>" method="POST" id="loginForm">
+                        
+                        <!-- Hidden field for redirect URL -->
+                        <?php if ($redirectUrl): ?>
+                        <input type="hidden" name="redirect_url" value="<?php echo htmlspecialchars($redirectUrl); ?>">
+                        <?php endif; ?>
                         
                         <!-- Email Field -->
                         <div class="mb-4">

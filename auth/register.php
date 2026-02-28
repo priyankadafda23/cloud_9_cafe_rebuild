@@ -10,14 +10,7 @@ if (isset($_POST['reg_btn'])) {
     $phone = $_POST['phone'];
     $password = $_POST['password'];
     $gender = $_POST['gender'];
-    $profile_picture = $_FILES['profile_picture']['name'];
-    $tmp_name = $_FILES['profile_picture']['tmp_name'];
-    $upload_dir = "uploads/";
     $address = "Rajkot";
-    
-    if (!is_dir($upload_dir)) {
-        mkdir($upload_dir, 0755, true);
-    }
     
     $fullname = $fname . " " . $lname;
     $token = uniqid();
@@ -27,13 +20,6 @@ if (isset($_POST['reg_btn'])) {
     if ($existingUser) {
         $register_error = "Email already registered. Please use a different email.";
     } else {
-        // Handle profile picture upload
-        $profile_pic_path = null;
-        if (!empty($profile_picture)) {
-            $profile_pic_path = $upload_dir . time() . '_' . $profile_picture;
-            move_uploaded_file($tmp_name, $profile_pic_path);
-        }
-        
         // Insert user into JSON database
         $userData = [
             'fullname' => $fullname,
@@ -41,7 +27,7 @@ if (isset($_POST['reg_btn'])) {
             'password' => $password,
             'gender' => $gender,
             'mobile' => $phone,
-            'profile_picture' => $profile_pic_path,
+            'profile_picture' => null,
             'address' => $address,
             'reward_points' => 0,
             'status' => 'Active',
@@ -91,7 +77,7 @@ ob_start();
                     <?php endif; ?>
 
                     <!-- Registration Form -->
-                    <form action="register.php" method="post" id="regform" enctype="multipart/form-data">
+                    <form action="register.php" method="post" id="regform">
                         <div class="row g-3">
                             <!-- First Name -->
                             <div class="col-md-6">
@@ -167,21 +153,6 @@ ob_start();
                                 <div id="gender_error" class="invalid-feedback d-block"></div>
                             </div>
 
-                            <!-- Profile Picture -->
-                            <div class="col-md-6">
-                                <label for="profile_picture" class="form-label fw-medium">Profile Picture</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0">
-                                        <i class="fas fa-camera text-muted"></i>
-                                    </span>
-                                    <input type="file" class="form-control border-start-0 ps-0" id="profile_picture" name="profile_picture" 
-                                           accept="image/*"
-                                           data-validation="fileType,fileSize" data-filetype="jpg,jpeg,png,gif" data-filesize="2048">
-                                </div>
-                                <div id="profile_picture_error" class="invalid-feedback d-block"></div>
-                                <small class="text-muted">Max 2MB (JPG, PNG, GIF)</small>
-                            </div>
-
                             <!-- Password -->
                             <div class="col-md-6">
                                 <label for="password" class="form-label fw-medium">Password</label>
@@ -192,7 +163,7 @@ ob_start();
                                     <input type="password" class="form-control border-start-0 ps-0" id="password" name="password" 
                                            placeholder="Create password" 
                                            data-validation="required,strongPassword">
-                                    <button type="button" class="btn btn-outline-secondary border-start-0 toggle-password" data-target="#password">
+                                    <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#password" tabindex="-1">
                                         <i class="fas fa-eye"></i>
                                     </button>
                                 </div>
@@ -207,8 +178,10 @@ ob_start();
                                         <i class="fas fa-lock text-muted"></i>
                                     </span>
                                     <input type="password" class="form-control border-start-0 ps-0" id="confirmPassword" name="confirmPassword" 
-                                           placeholder="Confirm password" 
-                                           data-validation="required,confirmPassword">
+                                           placeholder="Confirm password">
+                                    <button type="button" class="btn btn-outline-secondary toggle-password" data-target="#confirmPassword" tabindex="-1">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
                                 </div>
                                 <div id="confirmPassword_error" class="invalid-feedback d-block"></div>
                             </div>
@@ -286,25 +259,103 @@ ob_start();
     .is-invalid {
         border-color: #dc3545 !important;
     }
+    
+    /* Toggle password button styling */
+    .toggle-password {
+        cursor: pointer;
+        z-index: 10;
+    }
+    
+    .toggle-password:hover {
+        background-color: #e9ecef !important;
+    }
 </style>
 
 <script src="../assets/js/jquery.js"></script>
 <script src="../assets/js/validate.js"></script>
 <script>
-    // Toggle password visibility
-    document.querySelectorAll('.toggle-password').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const input = document.querySelector(this.dataset.target);
-            const icon = this.querySelector('i');
+    // Toggle password visibility - using vanilla JS for better compatibility
+    document.addEventListener('DOMContentLoaded', function() {
+        var toggleButtons = document.querySelectorAll('.toggle-password');
+        
+        toggleButtons.forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                
+                var targetSelector = this.getAttribute('data-target');
+                var input = document.querySelector(targetSelector);
+                var icon = this.querySelector('i');
+                
+                if (input && icon) {
+                    if (input.getAttribute('type') === 'password') {
+                        input.setAttribute('type', 'text');
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.setAttribute('type', 'password');
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                }
+            });
+        });
+        
+        // Direct password match validation
+        var passwordField = document.getElementById('password');
+        var confirmField = document.getElementById('confirmPassword');
+        var confirmError = document.getElementById('confirmPassword_error');
+        
+        function checkPasswordMatch() {
+            var pass = passwordField.value;
+            var confirm = confirmField.value;
             
-            if (input.type === 'password') {
-                input.type = 'text';
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
+            // Always check if confirm has value
+            if (confirm.length > 0) {
+                // Direct string comparison
+                if (pass === confirm) {
+                    // MATCH
+                    confirmError.textContent = '';
+                    confirmError.style.display = 'none';
+                    confirmField.classList.remove('is-invalid');
+                    confirmField.classList.add('is-valid');
+                    return true;
+                } else {
+                    // NO MATCH
+                    confirmError.textContent = 'Passwords do not match.';
+                    confirmError.style.display = 'block';
+                    confirmField.classList.add('is-invalid');
+                    confirmField.classList.remove('is-valid');
+                    return false;
+                }
             } else {
-                input.type = 'password';
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
+                // Empty confirm field
+                confirmError.textContent = '';
+                confirmError.style.display = 'none';
+                confirmField.classList.remove('is-invalid', 'is-valid');
+                return false;
+            }
+        }
+        
+        // Check on input (typing)
+        confirmField.addEventListener('input', checkPasswordMatch);
+        
+        // Check when password changes (if confirm is not empty)
+        passwordField.addEventListener('input', function() {
+            if (confirmField.value.length > 0) {
+                checkPasswordMatch();
+            }
+        });
+        
+        // Check on blur (when leaving the field)
+        confirmField.addEventListener('blur', checkPasswordMatch);
+        
+        // Form submit check
+        document.getElementById('regform').addEventListener('submit', function(e) {
+            var isMatch = checkPasswordMatch();
+            if (!isMatch) {
+                e.preventDefault();
+                confirmField.focus();
             }
         });
     });
