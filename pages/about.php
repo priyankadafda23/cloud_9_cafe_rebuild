@@ -8,8 +8,8 @@ ob_start();
     <div class="container">
         <div class="row justify-content-center text-center text-white">
             <div class="col-lg-8 animate-fade-in-up">
-                <h1 class="fw-bold mb-3">About Cloud 9 Cafe</h1>
-                <p class="lead opacity-75 mb-0">Brewing happiness, one cup at a time since 2020</p>
+                <h1 class="fw-bold text-white mb-3">About Cloud 9 Cafe</h1>
+                <p class="lead opacity-75 text-white mb-0">Brewing happiness, one cup at a time since 2020</p>
             </div>
         </div>
     </div>
@@ -32,7 +32,7 @@ ob_start();
                 </div>
             </div>
             <div class="col-lg-6 animate-on-scroll stagger-1">
-                <span class="badge bg-primary bg-opacity-10 text-primary mb-3">Our Story</span>
+                <span class="badge bg-primary bg-opacity-10 text-white mb-3">Our Story</span>
                 <h2 class="fw-bold mb-4">A Journey Fueled by Passion for Coffee</h2>
                 <p class="text-muted mb-3">
                     Founded in 2020, Cloud 9 Cafe began with a simple mission: to create a welcoming space where 
@@ -72,7 +72,7 @@ ob_start();
 <section class="py-5">
     <div class="container">
         <div class="text-center mb-5 animate-on-scroll">
-            <span class="badge bg-primary bg-opacity-10 text-primary mb-3">Why Choose Us</span>
+            <span class="badge bg-primary bg-opacity-10 text-white mb-3">Why Choose Us</span>
             <h2 class="fw-bold">Our Values</h2>
             <p class="text-muted max-w-600 mx-auto">The principles that guide everything we do</p>
         </div>
@@ -115,7 +115,7 @@ ob_start();
 <section class="py-5" style="background: white;">
     <div class="container">
         <div class="text-center mb-5 animate-on-scroll">
-            <span class="badge bg-primary bg-opacity-10 text-primary mb-3">Our Team</span>
+            <span class="badge bg-primary bg-opacity-10 text-white mb-3">Our Team</span>
             <h2 class="fw-bold">Meet the People Behind the Magic</h2>
             <p class="text-muted">Passionate individuals dedicated to your perfect coffee experience</p>
         </div>
@@ -126,10 +126,10 @@ ob_start();
                     <div class="card-body p-4">
                         <div class="mb-4">
                             <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--cafe-primary) 0%, var(--cafe-primary-dark) 100%); color: white; font-size: 2.5rem; font-weight: bold;">
-                                SC
+                                PD
                             </div>
                         </div>
-                        <h4 class="fw-bold mb-1">Sarah Chen</h4>
+                        <h4 class="fw-bold mb-1">Priyanka Dafda</h4>
                         <p class="text-primary mb-3">Founder & Head Barista</p>
                         <p class="text-muted small mb-0">Coffee enthusiast with 10+ years of experience in specialty coffee. Certified Q Grader and latte art champion.</p>
                     </div>
@@ -141,10 +141,10 @@ ob_start();
                     <div class="card-body p-4">
                         <div class="mb-4">
                             <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--cafe-accent) 0%, #E8C9A0 100%); color: white; font-size: 2.5rem; font-weight: bold;">
-                                MR
+                                TD
                             </div>
                         </div>
-                        <h4 class="fw-bold mb-1">Marcus Rodriguez</h4>
+                        <h4 class="fw-bold mb-1">Tisha Mandaviya</h4>
                         <p class="text-primary mb-3">Executive Chef</p>
                         <p class="text-muted small mb-0">Culinary expert crafting our delicious pastries and sandwiches. Previously worked at Michelin-starred restaurants.</p>
                     </div>
@@ -156,10 +156,10 @@ ob_start();
                     <div class="card-body p-4">
                         <div class="mb-4">
                             <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%); color: white; font-size: 2.5rem; font-weight: bold;">
-                                EK
+                                NH
                             </div>
                         </div>
-                        <h4 class="fw-bold mb-1">Emily Kim</h4>
+                        <h4 class="fw-bold mb-1">Nandini Hirpara</h4>
                         <p class="text-primary mb-3">Operations Manager</p>
                         <p class="text-muted small mb-0">Ensures every customer has a delightful experience. Expert in customer service and team management.</p>
                     </div>
@@ -174,8 +174,8 @@ ob_start();
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-8 text-white mb-4 mb-lg-0 animate-on-scroll">
-                <h2 class="fw-bold mb-3">Visit Us Today!</h2>
-                <p class="lead opacity-75 mb-0">Experience the Cloud 9 difference. Great coffee, delicious food, and a warm atmosphere await you.</p>
+                <h2 class="fw-bold text-white mb-3">Visit Us Today!</h2>
+                <p class="lead opacity-75 text-white mb-0">Experience the Cloud 9 difference. Great coffee, delicious food, and a warm atmosphere await you.</p>
             </div>
             <div class="col-lg-4 text-lg-end animate-on-scroll stagger-1">
                 <a href="contact.php" class="btn btn-accent btn-lg">

@@ -6,8 +6,8 @@ ob_start();
 <!-- Page Header -->
 <section class="py-5" style="background: var(--gradient-primary);">
     <div class="container text-center text-white py-4">
-        <h1 class="fw-bold mb-2">Frequently Asked Questions</h1>
-        <p class="mb-0 opacity-75">Everything you need to know about Cloud 9 Cafe</p>
+        <h1 class="fw-bold text-white mb-2">Frequently Asked Questions</h1>
+        <p class="mb-0 text-white opacity-75">Everything you need to know about Cloud 9 Cafe</p>
     </div>
 </section>
 

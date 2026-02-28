@@ -143,8 +143,8 @@ ob_start();
             <div class="col-lg-4">
                 <div class="card border-0 shadow-lg h-100" style="background: linear-gradient(135deg, var(--cafe-primary) 0%, var(--cafe-primary-dark) 100%);">
                     <div class="card-body p-4 p-md-5 text-white">
-                        <h4 class="fw-bold mb-4">
-                            <i class="fas fa-address-card me-2 text-accent"></i>Contact Info
+                        <h4 class="fw-bold text-white mb-4">
+                            <i class="fas fa-address-card me-2 text-white"></i>Contact Info
                         </h4>
                         
                         <div class="mb-4">
@@ -155,8 +155,8 @@ ob_start();
                                     </div>
                                 </div>
                                 <div class="ms-3">
-                                    <h6 class="fw-bold mb-1">Address</h6>
-                                    <p class="mb-0 opacity-75">123 Coffee Street<br>Cafe City, CC 12345</p>
+                                    <h6 class="fw-bold text-white mb-1">Address</h6>
+                                    <p class="mb-0 text-white opacity-75">123 Coffee Street<br>Cafe City, CC 12345</p>
                                 </div>
                             </div>
                             
@@ -167,8 +167,8 @@ ob_start();
                                     </div>
                                 </div>
                                 <div class="ms-3">
-                                    <h6 class="fw-bold mb-1">Phone</h6>
-                                    <p class="mb-0 opacity-75"><a href="tel:+15551234567" class="text-white text-decoration-none">+1 (555) 123-4567</a></p>
+                                    <h6 class="fw-bold text-white mb-1">Phone</h6>
+                                    <p class="mb-0 text-white opacity-75"><a href="tel:+15551234567" class="text-white text-decoration-none">+1 (555) 123-4567</a></p>
                                 </div>
                             </div>
                             
@@ -179,8 +179,8 @@ ob_start();
                                     </div>
                                 </div>
                                 <div class="ms-3">
-                                    <h6 class="fw-bold mb-1">Email</h6>
-                                    <p class="mb-0 opacity-75"><a href="mailto:hello@cloud9cafe.com" class="text-white text-decoration-none">hello@cloud9cafe.com</a></p>
+                                    <h6 class="fw-bold text-white mb-1">Email</h6>
+                                    <p class="mb-0 text-white opacity-75"><a href="mailto:hello@cloud9cafe.com" class="text-white text-decoration-none">hello@cloud9cafe.com</a></p>
                                 </div>
                             </div>
                             
@@ -191,15 +191,15 @@ ob_start();
                                     </div>
                                 </div>
                                 <div class="ms-3">
-                                    <h6 class="fw-bold mb-1">Hours</h6>
-                                    <p class="mb-0 opacity-75">Mon - Fri: 7AM - 10PM<br>Sat - Sun: 8AM - 11PM</p>
+                                    <h6 class="fw-bold text-white mb-1">Hours</h6>
+                                    <p class="mb-0 text-white opacity-75">Mon - Fri: 7AM - 10PM<br>Sat - Sun: 8AM - 11PM</p>
                                 </div>
                             </div>
                         </div>
                         
                         <hr style="border-color: rgba(255,255,255,0.1);">
                         
-                        <h6 class="fw-bold mb-3">Follow Us</h6>
+                        <h6 class="fw-bold text-white mb-3">Follow Us</h6>
                         <div class="d-flex gap-2">
                             <a href="#" class="social-icon d-flex align-items-center justify-content-center rounded-circle text-white" style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); transition: all 0.3s;">
                                 <i class="fab fa-facebook-f"></i>

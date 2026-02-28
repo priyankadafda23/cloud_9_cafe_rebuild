@@ -95,15 +95,15 @@ ob_start();
                 <div class="row mt-5 pt-3">
                     <div class="col-4">
                         <h4 class="fw-bold text-white mb-1">15K+</h4>
-                        <small class="text-white-50">Happy Customers</small>
+                        <small class="text-black-50">Happy Customers</small>
                     </div>
                     <div class="col-4">
                         <h4 class="fw-bold text-white mb-1">50+</h4>
-                        <small class="text-white-50">Menu Items</small>
+                        <small class="text-black-50">Menu Items</small>
                     </div>
                     <div class="col-4">
                         <h4 class="fw-bold text-white mb-1">4.9</h4>
-                        <small class="text-white-50">Rating</small>
+                        <small class="text-black-50">Rating</small>
                     </div>
                 </div>
             </div>
@@ -132,7 +132,7 @@ ob_start();
     <div class="container">
         <!-- Section Header -->
         <div class="text-center mb-5 animate-on-scroll">
-            <span class="badge bg-primary bg-opacity-10 text-primary mb-3">Why Choose Us</span>
+            <span class="badge bg-primary bg-opacity-10 text-white mb-3">Why Choose Us</span>
             <h2 class="fw-bold">The Cloud 9 Experience</h2>
             <p class="text-muted max-w-600 mx-auto">We're passionate about delivering exceptional coffee experiences that brighten your day.</p>
         </div>
@@ -263,7 +263,7 @@ ob_start();
     <div class="container">
         <!-- Section Header -->
         <div class="text-center mb-5 animate-on-scroll">
-            <span class="badge bg-primary bg-opacity-10 text-primary mb-3">Testimonials</span>
+            <span class="badge bg-primary bg-opacity-10 text-white mb-3">Testimonials</span>
             <h2 class="fw-bold">What Our Customers Say</h2>
         </div>
         

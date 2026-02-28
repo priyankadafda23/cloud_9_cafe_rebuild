@@ -44,8 +44,8 @@ ob_start();
     <div class="container">
         <div class="row justify-content-center text-center text-white">
             <div class="col-lg-8 animate-fade-in-up">
-                <h1 class="fw-bold mb-3">Our Menu</h1>
-                <p class="lead opacity-75 mb-0">Discover our handcrafted selection of premium coffees, delicious snacks, and delightful desserts.</p>
+                <h1 class="fw-bold text-white mb-3">Our Menu</h1>
+                <p class="lead opacity-75 text-white mb-0">Discover our handcrafted selection of premium coffees, delicious snacks, and delightful desserts.</p>
             </div>
         </div>
     </div>
@@ -147,7 +147,7 @@ ob_start();
                     </div>
                     <div class="product-info">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge bg-primary bg-opacity-10 text-primary" style="font-size: 0.7rem;">
+                            <span class="badge bg-primary bg-opacity-10 text-white" style="font-size: 0.7rem;">
                                 <?php echo $item['category']; ?>
                             </span>
                             <?php if ($item['stock_quantity'] < 10): ?>
