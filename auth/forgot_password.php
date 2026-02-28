@@ -1,5 +1,5 @@
 <?php
-$title = "Forgot Password - JK Store";
+$title = "Forgot Password";
 ob_start();
 ?>
 <div class="container">

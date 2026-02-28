@@ -128,7 +128,7 @@ ob_start();
                             <div class="d-flex align-items-center">
                                 <div class="flex-shrink-0">
                                     <?php if ($user['profile_picture']): ?>
-                                    <img src="../<?php echo $user['profile_picture']; ?>" alt="" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;">
+                                    <!-- <img src="../<?php echo $user['profile_picture']; ?>" alt="" class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover;"> -->
                                     <?php else: ?>
                                     <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
                                         <i class="fas fa-user text-primary"></i>

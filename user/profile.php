@@ -85,8 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['update_profile'])) {
             'fullname' => $fullname,
             'email' => $email,
             'mobile' => $mobile,
-            'gender' => $gender,
-            'profile_picture' => $profile_picture
+            'gender' => $gender
         ];
         
         $updated = $db->update('cafe_users', $updateData, ['id' => $user_id]);

@@ -37,39 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     } else {
         // Handle profile picture upload
         $profile_picture = $user['profile_picture'] ?? null;
-        if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
-            // Create user-specific folder: assets/uploads/Profile/{client_name}_{user_id}/
-            $safe_name = createSafeFolderName($fullname);
-            $user_folder = $safe_name . '_' . $user_id;
-            $upload_dir = '../assets/uploads/Profile/' . $user_folder . '/';
-            
-            if (!is_dir($upload_dir)) {
-                mkdir($upload_dir, 0755, true);
-            }
-            
-            // Get file extension
-            $file_info = pathinfo($_FILES['profile_picture']['name']);
-            $extension = strtolower($file_info['extension']);
-            
-            // Validate allowed extensions
-            $allowed = ['jpg', 'jpeg', 'png', 'gif'];
-            if (in_array($extension, $allowed)) {
-                // Delete old profile picture if exists
-                if ($profile_picture && file_exists('../' . $profile_picture)) {
-                    unlink('../' . $profile_picture);
-                }
-                
-                // Save with standardized name: profile_picture.{extension}
-                $filename = 'profile_picture.' . $extension;
-                $target_path = $upload_dir . $filename;
-                
-                if (move_uploaded_file($_FILES['profile_picture']['tmp_name'], $target_path)) {
-                    $profile_picture = 'assets/uploads/Profile/' . $user_folder . '/' . $filename;
-                }
-            } else {
-                $error = 'Invalid file type. Only JPG, PNG, and GIF allowed.';
-            }
-        }
+        
         
         $updateData = [
             'fullname' => $fullname,
