@@ -96,63 +96,60 @@ ob_start();
         <!-- Admin Profile Display -->
         <div class="admin-profile">
             <!-- Admin Avatar - Shows default if no profile picture -->
-            <img src="<?php echo $current_admin['profile_picture'] ? '/' . $current_admin['profile_picture'] : '/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'; ?>" 
-                 alt="Admin" class="admin-avatar" 
-                 onerror="this.src='/cloud_9_cafe_rebuild/assets/uploads/Profile/default.png'">
             <div class="admin-info">
-                <h6 class="mb-0"><?php echo htmlspecialchars($current_admin['fullname'] ?? 'Admin'); ?></h6>
+                <h6 class="mb-0 text-white"><?php echo htmlspecialchars($current_admin['fullname'] ?? 'Admin'); ?></h6>
                 <!-- Display admin role (super_admin, manager, staff) -->
                 <small><?php echo $auth->getAdminRole() ?? 'Administrator'; ?></small>
             </div>
         </div>
         
         <!-- Admin Navigation Menu -->
-        <nav class="admin-nav">
+        <nav class="admin-nav text">
             <!-- Main Section Header -->
-            <div class="nav-section">Main</div>
+            <div class="nav-section  text-white">Main</div>
             
             <!-- Dashboard Link - Click redirects to: dashboard.php -->
             <a href="dashboard.php" class="nav-link <?php echo $current_page == 'dashboard' ? 'active' : ''; ?>">
-                <i class="fas fa-th-large"></i>
+                <i class="fas fa-th-large text-white"></i>
                 Dashboard
             </a>
             
             <!-- Users Link - Click redirects to: users.php -->
             <a href="users.php" class="nav-link <?php echo $current_page == 'users' ? 'active' : ''; ?>">
-                <i class="fas fa-users"></i>
+                <i class="fas fa-users text-white"></i>
                 Users
             </a>
             
             <!-- Orders Link - Click redirects to: orders.php -->
             <a href="orders.php" class="nav-link <?php echo $current_page == 'orders' ? 'active' : ''; ?>">
-                <i class="fas fa-shopping-bag"></i>
+                <i class="fas fa-shopping-bag text-white"></i>
                 Orders
             </a>
             
             <!-- Menu Link - Click redirects to: menu.php -->
             <a href="menu.php" class="nav-link <?php echo $current_page == 'menu' ? 'active' : ''; ?>">
-                <i class="fas fa-coffee"></i>
+                <i class="fas fa-coffee text-white"></i>
                 Menu
             </a>
             
             <!-- Management Section Header -->
-            <div class="nav-section">Management</div>
+            <div class="nav-section  text-white">Management</div>
             
             <!-- Messages Link - Click redirects to: messages.php -->
             <a href="messages.php" class="nav-link <?php echo $current_page == 'messages' ? 'active' : ''; ?>">
-                <i class="fas fa-envelope"></i>
+                <i class="fas fa-envelope text-white"></i>
                 Messages
             </a>
             
             <!-- Profile Link - Click redirects to: profile.php -->
             <a href="profile.php" class="nav-link <?php echo $current_page == 'profile' ? 'active' : ''; ?>">
-                <i class="fas fa-user-cog"></i>
+                <i class="fas fa-user-cog text-white"></i>
                 My Profile
             </a>
             
             <!-- Logout Link - Click redirects to: ../auth/logout.php -->
             <a href="../auth/logout.php" class="nav-link">
-                <i class="fas fa-sign-out-alt"></i>
+                <i class="fas fa-sign-out-alt text-white"></i>
                 Logout
             </a>
         </nav>

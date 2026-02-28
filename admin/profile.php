@@ -123,7 +123,7 @@ ob_start();
 <!-- Page Header -->
 <div class="page-header">
     <h3 class="fw-bold mb-2"><i class="fas fa-user-cog me-2"></i>My Profile</h3>
-    <p class="mb-0 opacity-75">Manage your admin account settings</p>
+    <p class="mb-0  text-white opacity-75">Manage your admin account settings</p>
 </div>
 
 <?php if ($success): ?>

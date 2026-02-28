@@ -45,8 +45,8 @@ ob_start();
     <div class="container">
         <div class="row justify-content-center text-center text-white">
             <div class="col-lg-8 animate-fade-in-up">
-                <h1 class="fw-bold mb-3">Get In Touch</h1>
-                <p class="lead opacity-75 mb-0">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+                <h1 class="fw-bold text-white mb-3">Get In Touch</h1>
+                <p class="lead opacity-75 text-white mb-0">We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
             </div>
         </div>
     </div>
@@ -226,7 +226,7 @@ ob_start();
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-lg-8 text-center mb-5 animate-on-scroll">
-                <span class="badge bg-primary bg-opacity-10 text-primary mb-3">FAQ</span>
+                <span class="badge bg-primary bg-opacity-10 text-white mb-3">FAQ</span>
                 <h2 class="fw-bold">Frequently Asked Questions</h2>
                 <p class="text-muted">Quick answers to common questions</p>
             </div>
