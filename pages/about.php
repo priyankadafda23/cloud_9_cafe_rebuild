@@ -150,21 +150,6 @@ ob_start();
                     </div>
                 </div>
             </div>
-            
-            <div class="col-md-4 animate-on-scroll stagger-3">
-                <div class="card border-0 shadow-sm text-center h-100">
-                    <div class="card-body p-4">
-                        <div class="mb-4">
-                            <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%); color: white; font-size: 2.5rem; font-weight: bold;">
-                                NH
-                            </div>
-                        </div>
-                        <h4 class="fw-bold mb-1">Nandini Hirpara</h4>
-                        <p class="text-primary mb-3">Operations Manager</p>
-                        <p class="text-muted small mb-0">Ensures every customer has a delightful experience. Expert in customer service and team management.</p>
-                    </div>
-                </div>
-            </div>
         </div>
     </div>
 </section>

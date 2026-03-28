@@ -66,7 +66,7 @@ ob_start();
     <div class="row align-items-center">
         <div class="col-md-8">
             <h2><i class="fas fa-users me-2"></i>User Management</h2>
-            <p>Manage cafe customers and their accounts</p>
+            <p class="text-white">Manage cafe customers and their accounts</p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
             <span class="badge bg-white text-primary fs-6 px-3 py-2">Total: <?php echo $total_users; ?> Users</span>

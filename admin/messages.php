@@ -103,7 +103,7 @@ ob_start();
     <div class="row align-items-center">
         <div class="col-md-6">
             <h3 class="fw-bold mb-2"><i class="fas fa-envelope me-2"></i>Contact Messages</h3>
-            <p class="mb-0 opacity-75">View and manage customer messages</p>
+            <p class="mb-0 opacity-75 text-white">View and manage customer messages</p>
         </div>
     </div>
 </div>

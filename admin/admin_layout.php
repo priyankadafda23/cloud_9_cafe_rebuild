@@ -106,30 +106,30 @@ ob_start();
         <!-- Admin Navigation Menu -->
         <nav class="admin-nav text">
             <!-- Main Section Header -->
-            <div class="nav-section  text-white">Main</div>
+            <div class="nav-section text-white">Main</div>
             
             <!-- Dashboard Link - Click redirects to: dashboard.php -->
             <a href="dashboard.php" class="nav-link <?php echo $current_page == 'dashboard' ? 'active' : ''; ?>">
                 <i class="fas fa-th-large text-white"></i>
-                Dashboard
+                <div class="text-white">Dashboard</div>
             </a>
             
             <!-- Users Link - Click redirects to: users.php -->
-            <a href="users.php" class="nav-link <?php echo $current_page == 'users' ? 'active' : ''; ?>">
+            <a href="users.php" class="nav-link <?php echo $current_page == 'users' ? 'active' : ''; ?>" style="text:white;">
                 <i class="fas fa-users text-white"></i>
-                Users
+                <div class="text-white">Users</div>
             </a>
             
             <!-- Orders Link - Click redirects to: orders.php -->
             <a href="orders.php" class="nav-link <?php echo $current_page == 'orders' ? 'active' : ''; ?>">
                 <i class="fas fa-shopping-bag text-white"></i>
-                Orders
+                <div class="text-white">Orders</div>
             </a>
             
             <!-- Menu Link - Click redirects to: menu.php -->
             <a href="menu.php" class="nav-link <?php echo $current_page == 'menu' ? 'active' : ''; ?>">
                 <i class="fas fa-coffee text-white"></i>
-                Menu
+                <div class="text-white">Menu</div>
             </a>
             
             <!-- Management Section Header -->
@@ -138,19 +138,19 @@ ob_start();
             <!-- Messages Link - Click redirects to: messages.php -->
             <a href="messages.php" class="nav-link <?php echo $current_page == 'messages' ? 'active' : ''; ?>">
                 <i class="fas fa-envelope text-white"></i>
-                Messages
+                <div class="text-white">Messages</div>
             </a>
             
             <!-- Profile Link - Click redirects to: profile.php -->
             <a href="profile.php" class="nav-link <?php echo $current_page == 'profile' ? 'active' : ''; ?>">
                 <i class="fas fa-user-cog text-white"></i>
-                My Profile
+                <div class="text-white">My Profile</div>
             </a>
             
             <!-- Logout Link - Click redirects to: ../auth/logout.php -->
             <a href="../auth/logout.php" class="nav-link">
                 <i class="fas fa-sign-out-alt text-white"></i>
-                Logout
+                <div class="text-white">Logout</div>
             </a>
         </nav>
     </aside>

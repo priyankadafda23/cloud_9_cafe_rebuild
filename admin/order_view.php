@@ -119,7 +119,7 @@ ob_start();
     <div class="row align-items-center">
         <div class="col-md-6">
             <h3 class="fw-bold mb-2"><i class="fas fa-clipboard-list me-2"></i>Order Details</h3>
-            <p class="mb-0 opacity-75"><?php echo htmlspecialchars($order['order_number']); ?></p>
+            <p class="mb-0 opacity-75 text-white"><?php echo htmlspecialchars($order['order_number']); ?></p>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0">
             <a href="orders.php" class="btn btn-light rounded-pill px-4">

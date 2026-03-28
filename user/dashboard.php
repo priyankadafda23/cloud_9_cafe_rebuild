@@ -41,8 +41,8 @@ ob_start();
     <div class="card-body p-4 text-white">
         <div class="row align-items-center">
             <div class="col-lg-8">
-                <h4 class="fw-bold mb-2">Welcome back, <?php echo htmlspecialchars($user_name); ?>! ☕</h4>
-                <p class="mb-0 opacity-75">Here's what's happening with your account today.</p>
+                <h4 class="fw-bold mb-2 text-white">Welcome back, <?php echo htmlspecialchars($user_name); ?>! ☕</h4>
+                <p class="mb-0 opacity-75 text-white">Here's what's happening with your account today.</p>
             </div>
             <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
                 <a href="edit_profile.php" class="btn btn-light">
@@ -247,6 +247,8 @@ ob_start();
     .stat-card:hover {
         box-shadow: var(--shadow-lg);
         transform: translateY(-4px);
+        text-decoration: none;
+        color: white;
     }
     
     .stat-icon {

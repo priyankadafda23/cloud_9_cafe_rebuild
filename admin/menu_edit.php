@@ -131,7 +131,7 @@ ob_start();
     <div class="row align-items-center">
         <div class="col-md-6">
             <h3 class="fw-bold mb-2"><i class="fas fa-edit me-2"></i>Edit Menu Item</h3>
-            <p class="mb-0 opacity-75">Update menu item details</p>
+            <p class="mb-0 opacity-75 text-white">Update menu item details</p>
         </div>
         <div class="col-md-6 text-md-end mt-3 mt-md-0">
             <a href="menu.php" class="btn btn-light rounded-pill px-4">
@@ -170,7 +170,7 @@ ob_start();
                         </div>
                         
                         <div class="col-md-6">
-                            <label class="form-label">Price ($) *</label>
+                            <label class="form-label">Price (₹) *</label>
                             <input type="number" name="price" step="0.01" min="0" class="form-control" required value="<?php echo $item['price']; ?>">
                         </div>
                         

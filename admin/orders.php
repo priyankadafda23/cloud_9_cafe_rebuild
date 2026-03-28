@@ -72,7 +72,7 @@ ob_start();
     <div class="row align-items-center">
         <div class="col-md-8">
             <h2><i class="fas fa-shopping-bag me-2"></i>Order Management</h2>
-            <p>Manage and track customer orders</p>
+            <p class="text-white">Manage and track customer orders</p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
             <span class="badge bg-white text-primary fs-6 px-3 py-2">Total: <?php echo $total_orders; ?> Orders</span>

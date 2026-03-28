@@ -85,7 +85,7 @@ ob_start();
     <div class="row align-items-center">
         <div class="col-md-8">
             <h2><i class="fas fa-coffee me-2"></i>Menu Management</h2>
-            <p>Manage cafe menu items and inventory</p>
+            <p class="text-white">Manage cafe menu items and inventory</p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
             <a href="menu_add.php" class="btn btn-light">
@@ -183,7 +183,7 @@ ob_start();
                             </div>
                         </td>
                         <td>
-                            <span class="badge bg-primary bg-opacity-10 text-primary">
+                            <span class="badge bg-primary bg-opacity-10 text-white">
                                 <?php echo $item['category']; ?>
                             </span>
                         </td>
