@@ -120,37 +120,41 @@ ob_start();
             <p class="text-muted">Passionate individuals dedicated to your perfect coffee experience</p>
         </div>
         
-        <div class="row g-4">
-            <div class="col-md-4 animate-on-scroll stagger-1">
-                <div class="card border-0 shadow-sm text-center h-100">
-                    <div class="card-body p-4">
-                        <div class="mb-4">
-                            <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--cafe-primary) 0%, var(--cafe-primary-dark) 100%); color: white; font-size: 2.5rem; font-weight: bold;">
-                                PD
-                            </div>
-                        </div>
-                        <h4 class="fw-bold mb-1">Priyanka Dafda</h4>
-                        <p class="text-primary mb-3">Founder & Head Barista</p>
-                        <p class="text-muted small mb-0">Coffee enthusiast with 10+ years of experience in specialty coffee. Certified Q Grader and latte art champion.</p>
+<div class="row g-4 justify-content-center">
+
+    <div class="col-md-4 animate-on-scroll stagger-1">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center"
+                        style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--cafe-primary) 0%, var(--cafe-primary-dark) 100%); color: white; font-size: 2.5rem; font-weight: bold;">
+                        PD
                     </div>
                 </div>
-            </div>
-            
-            <div class="col-md-4 animate-on-scroll stagger-2">
-                <div class="card border-0 shadow-sm text-center h-100">
-                    <div class="card-body p-4">
-                        <div class="mb-4">
-                            <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center" style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--cafe-accent) 0%, #E8C9A0 100%); color: white; font-size: 2.5rem; font-weight: bold;">
-                                TD
-                            </div>
-                        </div>
-                        <h4 class="fw-bold mb-1">Tisha Mandaviya</h4>
-                        <p class="text-primary mb-3">Executive Chef</p>
-                        <p class="text-muted small mb-0">Culinary expert crafting our delicious pastries and sandwiches. Previously worked at Michelin-starred restaurants.</p>
-                    </div>
-                </div>
+                <h4 class="fw-bold mb-1">Priyanka Dafda</h4>
+                <p class="text-primary mb-3">Founder & Head Barista</p>
+                <p class="text-muted small mb-0">Coffee enthusiast with 10+ years of experience.</p>
             </div>
         </div>
+    </div>
+
+    <div class="col-md-4 animate-on-scroll stagger-2">
+        <div class="card border-0 shadow-sm text-center h-100">
+            <div class="card-body p-4">
+                <div class="mb-4">
+                    <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center"
+                        style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--cafe-accent) 0%, #E8C9A0 100%); color: white; font-size: 2.5rem; font-weight: bold;">
+                        TD
+                    </div>
+                </div>
+                <h4 class="fw-bold mb-1">Tisha Mandaviya</h4>
+                <p class="text-primary mb-3">Executive Chef</p>
+                <p class="text-muted small mb-0">Culinary expert crafting delicious pastries.</p>
+            </div>
+        </div>
+    </div>
+
+</div>
     </div>
 </section>
 

@@ -156,7 +156,7 @@ ob_start();
                                 </div>
                                 <div class="ms-3">
                                     <h6 class="fw-bold text-white mb-1">Address</h6>
-                                    <p class="mb-0 text-white opacity-75">123 Coffee Street<br>Cafe City, CC 12345</p>
+                                    <p class="mb-0 text-white opacity-75">Rajkot, Gujarat</p>
                                 </div>
                             </div>
                             
@@ -168,7 +168,7 @@ ob_start();
                                 </div>
                                 <div class="ms-3">
                                     <h6 class="fw-bold text-white mb-1">Phone</h6>
-                                    <p class="mb-0 text-white opacity-75"><a href="tel:+15551234567" class="text-white text-decoration-none">+1 (555) 123-4567</a></p>
+                                    <p class="mb-0 text-white opacity-75"><a href="tel:+919876543210" class="text-white text-decoration-none">+91 9876543210</a></p>
                                 </div>
                             </div>
                             
@@ -180,7 +180,7 @@ ob_start();
                                 </div>
                                 <div class="ms-3">
                                     <h6 class="fw-bold text-white mb-1">Email</h6>
-                                    <p class="mb-0 text-white opacity-75"><a href="mailto:hello@cloud9cafe.com" class="text-white text-decoration-none">hello@cloud9cafe.com</a></p>
+                                    <p class="mb-0 text-white opacity-75"><a href="mailto:cloud9cafe.website@gmail.com" class="text-white text-decoration-none">cloud9cafe.website@gmail.com</a></p>
                                 </div>
                             </div>
                             
