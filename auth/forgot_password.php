@@ -1,5 +1,5 @@
 <?php
-$title = "Forgot Password";
+$title = "Forgot Password- Cloud9 Cafe";
 ob_start();
 ?>
 <div class="container">

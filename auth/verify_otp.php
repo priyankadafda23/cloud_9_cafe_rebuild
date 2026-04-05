@@ -1,5 +1,5 @@
 <?php
-$title = "Verify OTP - JK Store";
+$title = "Verify OTP - Cloud9 Cafe";
 ob_start();
 ?>
 <div class="container">
